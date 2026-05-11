@@ -1,0 +1,3147 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Essay Planner — AC English (v9)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0f14;
+      --surface: #141a24;
+      --surface-2: #1c2433;
+      --border: #2a3548;
+      --text: #e8edf5;
+      --muted: #94a3b8;
+      --accent: #5eead4;
+      --accent-dim: rgba(94, 234, 212, 0.14);
+      --warn: #fbbf24;
+      --radius: 10px;
+      --font: "DM Sans", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+      /* Popover: ~50% snappier than a typical 200ms fade (100ms) + smooth ease */
+      --popup-in-ms: 100ms;
+      --popup-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * { box-sizing: border-box; }
+    html {
+      font-size: clamp(14px, 0.28vw + 13.2px, 17px);
+      -webkit-text-size-adjust: 100%;
+    }
+    html, body {
+      height: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      font-size: 1rem;
+      line-height: 1.5;
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 10% -10%, rgba(94, 234, 212, 0.08), transparent 50%),
+        radial-gradient(900px 600px at 100% 0%, rgba(99, 102, 241, 0.06), transparent 45%),
+        var(--bg);
+      min-height: 100%;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(94, 234, 212, 0.35) var(--surface);
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(94, 234, 212, 0.32) var(--surface);
+    }
+    *::-webkit-scrollbar {
+      width: 9px;
+      height: 9px;
+    }
+    *::-webkit-scrollbar-track {
+      background: var(--bg);
+      border-radius: 100px;
+    }
+    *::-webkit-scrollbar-thumb {
+      background: linear-gradient(
+        175deg,
+        rgba(94, 234, 212, 0.42) 0%,
+        rgba(94, 234, 212, 0.14) 100%
+      );
+      border-radius: 100px;
+      border: 2px solid var(--bg);
+      background-clip: padding-box;
+    }
+    *::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(
+        175deg,
+        rgba(94, 234, 212, 0.58) 0%,
+        rgba(94, 234, 212, 0.28) 100%
+      );
+      border: 2px solid var(--bg);
+      background-clip: padding-box;
+    }
+    *::-webkit-scrollbar-corner {
+      background: var(--bg);
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+      padding-top: max(clamp(0.75rem, 2vw, 1.35rem), env(safe-area-inset-top));
+      padding-right: max(clamp(0.75rem, 4vw, 2.5rem), env(safe-area-inset-right));
+      padding-bottom: clamp(2rem, 5vw, 3.5rem);
+      padding-left: max(clamp(0.75rem, 4vw, 2.5rem), env(safe-area-inset-left));
+    }
+
+    header.top {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.35rem;
+      margin-bottom: 1rem;
+    }
+    .top-title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.45rem 1rem;
+    }
+    .top-title-row h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    #save-status.save-status {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      max-width: min(70vw, 20rem);
+      text-align: right;
+      line-height: 1.25;
+      flex-shrink: 1;
+      min-height: 1.2em;
+      transition: color 0.15s ease;
+    }
+    #save-status.save-status:empty {
+      display: none;
+    }
+    #save-status.save-status.save-status--ok {
+      color: #34d399;
+    }
+    #save-status.save-status.save-status--warn {
+      color: var(--warn);
+      font-weight: 600;
+    }
+    #save-status.save-status.save-status--muted {
+      color: var(--muted);
+      font-weight: 500;
+    }
+    header.top > .top-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 0.65rem 0.85rem;
+      padding: 0.75rem 0.85rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+    }
+    .meta-row label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      flex: 1 1 auto;
+      min-width: 120px;
+    }
+    .meta-row label.word-count-label { min-width: 100px; flex: 0 1 110px; }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      font: inherit;
+      color: var(--text);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.27rem 0.55rem;
+    }
+    input[type="number"] { font-family: var(--mono); font-size: 0.9rem; }
+    textarea {
+      width: 100%;
+      min-height: 2.7rem;
+      resize: vertical;
+    }
+    .plan-fields .field,
+    .conc-fields .field {
+      margin-bottom: 0.42rem;
+    }
+    .plan-fields .field label.prompt,
+    .conc-fields .field label.prompt {
+      margin-bottom: 0.15rem;
+      font-size: 0.8rem;
+      line-height: 1.25;
+    }
+    .plan-fields textarea,
+    .conc-fields textarea {
+      min-height: 0.95rem;
+      padding: 0.16rem 0.42rem;
+      line-height: 1.3;
+      font-size: 0.86rem;
+    }
+    input:focus, select:focus, textarea:focus, .body-unified-editor:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: flex-end;
+      margin-bottom: 1rem;
+    }
+    .toolbar label.row-label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .toolbar select {
+      min-width: min(220px, 100%);
+      max-width: 100%;
+    }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 0.45rem 0.75rem;
+      font-weight: 500;
+      font-size: 0.88rem;
+    }
+    button.primary {
+      background: var(--accent-dim);
+      border-color: rgba(94, 234, 212, 0.35);
+      color: var(--accent);
+    }
+    button:hover { filter: brightness(1.08); }
+    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    section.block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1rem 0.25rem;
+      margin-bottom: 1rem;
+    }
+    section.block h3 {
+      margin: 0 0 0.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+    .field {
+      margin-bottom: 0.85rem;
+    }
+    .field label.prompt {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      font-size: 0.92rem;
+    }
+    /* Field hints live in label title + section title popovers */
+
+    details.planner-fold {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin: -0.35rem 0 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.35rem 0.5rem;
+      background: rgba(0, 0, 0, 0.12);
+    }
+    details.planner-fold summary {
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .field-pear-bubble {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: calc(100% + 6px);
+      z-index: 60;
+      min-width: min(440px, calc(100vw - 1.25rem));
+      width: max(100%, min(440px, calc(100vw - 1.25rem)));
+      max-width: min(760px, calc(100vw - 1.25rem));
+      padding: 0.7rem 0.95rem;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--text);
+      background: linear-gradient(165deg, rgba(28, 36, 51, 0.98) 0%, rgba(20, 26, 36, 0.99) 100%);
+      border: 1px solid rgba(94, 234, 212, 0.18);
+      border-radius: var(--radius);
+      box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.18),
+        0 16px 40px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(4px) scale(0.985);
+      transition:
+        opacity var(--popup-in-ms) var(--popup-ease),
+        transform var(--popup-in-ms) var(--popup-ease),
+        visibility 0s linear var(--popup-in-ms);
+      pointer-events: none;
+    }
+    .field-pear-bubble-inner .pear-popup-body p {
+      margin: 0 0 0.5rem;
+      font-size: 0.84rem;
+    }
+    .field-pear-bubble-inner .pear-popup-body p:last-child {
+      margin-bottom: 0;
+    }
+    .field-label-hint-host:hover .field-pear-bubble,
+    .field-label-hint-host:focus-within .field-pear-bubble {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+      transition:
+        opacity var(--popup-in-ms) var(--popup-ease),
+        transform var(--popup-in-ms) var(--popup-ease),
+        visibility 0s linear 0s;
+      pointer-events: auto;
+    }
+
+    .body-count {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
+    }
+    .body-count label { min-width: 200px; }
+
+    .para-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem;
+      margin-bottom: 0.85rem;
+    }
+    .body-editor-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .sentence-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 0.4rem 0.6rem;
+      position: relative;
+    }
+    .btn-add-sentence,
+    .btn-sentence-preset {
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.35rem 0.65rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--accent);
+      cursor: pointer;
+    }
+    .btn-sentence-preset {
+      font-weight: 500;
+      color: var(--text);
+    }
+    .btn-add-sentence:hover,
+    .btn-sentence-preset:hover {
+      filter: brightness(1.06);
+    }
+    .sentence-picker {
+      position: fixed;
+      z-index: 3000;
+      width: min(440px, calc(100vw - 1.25rem));
+      max-width: calc(100vw - 1.25rem);
+      max-height: none;
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+    }
+    .sentence-picker[hidden] {
+      display: none !important;
+    }
+    .sentence-picker-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      padding: 0.45rem 0.55rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .sentence-picker-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .btn-sentence-done {
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.3rem 0.55rem;
+      border-radius: 8px;
+      border: 1px solid rgba(94, 234, 212, 0.45);
+      background: var(--accent-dim);
+      color: var(--accent);
+      cursor: pointer;
+    }
+    .btn-sentence-done:hover {
+      filter: brightness(1.08);
+    }
+    .sentence-picker-close {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 1.1rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0.15rem 0.35rem;
+      border-radius: 6px;
+    }
+    .sentence-picker-close:hover {
+      color: var(--text);
+      background: var(--surface-2);
+    }
+    .sentence-picker-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.22rem;
+      padding: 0.4rem 0.5rem 0.5rem;
+    }
+    .sentence-picker-row {
+      display: grid;
+      grid-template-columns: 1fr 2.75rem;
+      align-items: center;
+      gap: 0.4rem;
+      min-height: 1.55rem;
+    }
+    .sentence-picker-row .st-label-wrap {
+      min-width: 0;
+    }
+    .sentence-picker-row .st-label {
+      font-size: 0.82rem;
+      color: var(--text);
+      line-height: 1.25;
+    }
+    .sentence-picker-row .st-tip {
+      display: none;
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: var(--muted);
+      margin-top: 0.1rem;
+    }
+    .sentence-slot {
+      width: 2.75rem;
+      height: 1.85rem;
+      padding: 0;
+      font: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: var(--mono);
+      color: var(--accent);
+      text-align: center;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      background: var(--surface-2);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .sentence-slot:hover,
+    .sentence-slot:focus-visible {
+      border-color: rgba(94, 234, 212, 0.5);
+      outline: none;
+    }
+    .sentence-slot[data-num] {
+      border-style: solid;
+      border-color: rgba(94, 234, 212, 0.35);
+    }
+    .body-unified-textarea {
+      width: 100%;
+      min-height: 12rem;
+      resize: vertical;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    div.body-unified-editor.body-unified-textarea {
+      white-space: normal;
+      overflow-wrap: anywhere;
+      cursor: text;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.35rem 0.55rem;
+      color: #ffffff;
+      caret-color: var(--accent);
+    }
+    .body-genre-label {
+      display: inline;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    span.body-genre-lead {
+      white-space: nowrap;
+    }
+    .body-plan-note {
+      display: inline;
+      color: #ffffff;
+      font-weight: 400;
+    }
+    div.body-unified-editor.body-structured-host.body-unified-textarea {
+      min-height: 0;
+      cursor: default;
+    }
+    .body-structured-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .body-plan-label-row {
+      margin: 0;
+      line-height: 1.25;
+    }
+    .body-plan-row {
+      margin: 0;
+    }
+    .body-plan-slim-input {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 1.35rem;
+      max-height: 8rem;
+      padding: 0.16rem 0.42rem;
+      font: inherit;
+      font-size: 0.86rem;
+      line-height: 1.3;
+      resize: vertical;
+      color: var(--text);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-top: 0.12rem;
+    }
+    .body-plan-slim-input:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+    .body-beat-hint {
+      margin: 0 0 0.45rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .body-beat-hint strong {
+      color: var(--text);
+    }
+    .body-editor-wrap .planner-fold {
+      margin: 0.15rem 0 0.15rem;
+    }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .planner-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .plan-conclusion-cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      align-items: stretch;
+    }
+    @media (max-width: 720px) {
+      .plan-conclusion-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+    .planner-section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      /* visible so section hint bubbles can extend past the card width */
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .planner-section-card-head {
+      padding: 0.55rem 0.85rem;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-2);
+      flex-shrink: 0;
+    }
+    .planner-section-card .planner-details-inner {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .planner-details-inner {
+      padding: 0.85rem 1rem 1rem;
+    }
+    .body-cards-region {
+      margin: 0;
+    }
+    .body-cards-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 0.65rem;
+      margin-bottom: 0.75rem;
+    }
+    .body-cards-toolbar-title {
+      flex: 1;
+      min-width: 0;
+    }
+    .body-cards-heading {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+    .section-hint-host {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      max-width: 100%;
+    }
+    .section-title-text {
+      border-bottom: 1px dotted rgba(148, 163, 184, 0.45);
+      cursor: help;
+    }
+    .section-hint-bubble {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: calc(100% + 8px);
+      z-index: 100;
+      min-width: min(440px, calc(100vw - 1.25rem));
+      width: max(100%, min(440px, calc(100vw - 1.25rem)));
+      max-width: min(760px, calc(100vw - 1.25rem));
+      padding: 0.75rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 400;
+      line-height: 1.45;
+      letter-spacing: 0.01em;
+      color: var(--text);
+      background: linear-gradient(165deg, rgba(28, 36, 51, 0.98) 0%, rgba(20, 26, 36, 0.99) 100%);
+      border: 1px solid rgba(94, 234, 212, 0.18);
+      border-radius: var(--radius);
+      box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.18),
+        0 16px 40px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(4px) scale(0.985);
+      transition:
+        opacity var(--popup-in-ms) var(--popup-ease),
+        transform var(--popup-in-ms) var(--popup-ease),
+        visibility 0s linear var(--popup-in-ms);
+      pointer-events: none;
+    }
+    .section-hint-bubble-inner p {
+      margin: 0 0 0.45rem;
+    }
+    .section-hint-bubble-inner p:last-child {
+      margin-bottom: 0;
+    }
+    .hint-popover-lead {
+      margin: 0 0 0.5rem !important;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    .hint-popover-muted {
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-top: 0.45rem !important;
+    }
+    ul.hint-popover-list {
+      margin: 0;
+      padding-left: 1.15rem;
+      color: var(--muted);
+    }
+    ul.hint-popover-list li {
+      margin-bottom: 0.35rem;
+    }
+    ul.hint-popover-list li:last-child {
+      margin-bottom: 0;
+    }
+    .section-hint-host:hover .section-hint-bubble,
+    .section-hint-host:focus-within .section-hint-bubble {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+      transition:
+        opacity var(--popup-in-ms) var(--popup-ease),
+        transform var(--popup-in-ms) var(--popup-ease),
+        visibility 0s linear 0s;
+      pointer-events: auto;
+    }
+    /* Exactly three columns per row: bodies 1–3, then 4–6, then 7–9, etc. */
+    .body-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(0.65rem, 2vw, 1rem);
+      align-items: start;
+    }
+    @media (max-width: 720px) {
+      .body-cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .body-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: visible;
+      position: relative;
+      z-index: 0;
+    }
+    .body-card-head {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.55rem 0.65rem;
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: var(--text);
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+    }
+    .body-card-title {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.35rem 0.65rem;
+    }
+    .body-card-title-main {
+      font-weight: 600;
+    }
+    .body-card-dot-hint {
+      font-weight: 400;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.01em;
+    }
+    .body-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      flex-shrink: 0;
+    }
+    button.card-copy {
+      border: none;
+      border-radius: 6px;
+      background: rgba(94, 234, 212, 0.1);
+      color: var(--accent);
+      width: 1.75rem;
+      height: 1.75rem;
+      padding: 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    button.card-copy:hover {
+      background: rgba(94, 234, 212, 0.2);
+      filter: none;
+    }
+    button.card-copy svg {
+      display: block;
+    }
+    button.card-remove {
+      border: none;
+      border-radius: 6px;
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      width: 1.75rem;
+      height: 1.75rem;
+      line-height: 1;
+      font-size: 1.1rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    button.card-remove:hover {
+      background: rgba(239, 68, 68, 0.22);
+      color: #fca5a5;
+      filter: none;
+    }
+    /* Replace native title= tooltips on card actions — matches hint bubble styling */
+    .card-action-tooltip-host {
+      position: relative;
+      display: inline-flex;
+      z-index: 5;
+    }
+    .card-action-tooltip {
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 6px);
+      z-index: 70;
+      padding: 0.45rem 0.65rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      line-height: 1.35;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      color: var(--text);
+      background: linear-gradient(165deg, rgba(28, 36, 51, 0.98) 0%, rgba(20, 26, 36, 0.99) 100%);
+      border: 1px solid rgba(94, 234, 212, 0.18);
+      border-radius: var(--radius);
+      box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.18),
+        0 14px 36px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      opacity: 0;
+      visibility: hidden;
+      transform: translate(-50%, 4px) scale(0.985);
+      transition:
+        opacity var(--popup-in-ms) var(--popup-ease),
+        transform var(--popup-in-ms) var(--popup-ease),
+        visibility 0s linear var(--popup-in-ms);
+      pointer-events: none;
+    }
+    .card-action-tooltip-host:hover .card-action-tooltip,
+    .card-action-tooltip-host:focus-within .card-action-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, 0) scale(1);
+      transition:
+        opacity var(--popup-in-ms) var(--popup-ease),
+        transform var(--popup-in-ms) var(--popup-ease),
+        visibility 0s linear 0s;
+      pointer-events: none;
+    }
+    .body-card .planner-details-inner {
+      padding: 0.65rem 0.75rem 0.85rem;
+    }
+    .body-card .para-card {
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 540px) {
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .toolbar label.row-label {
+        width: 100%;
+      }
+      .toolbar select {
+        width: 100%;
+      }
+    }
+
+    @media print {
+      body { background: #fff; color: #111; }
+      div.body-unified-editor.body-unified-textarea {
+        color: #111 !important;
+      }
+      .body-genre-label {
+        color: #555 !important;
+      }
+      .body-plan-note {
+        color: #111 !important;
+      }
+      .body-plan-slim-input {
+        color: #111 !important;
+        background: #fff !important;
+        border-color: #ccc !important;
+      }
+      #save-status.save-status {
+        display: none !important;
+      }
+      .toolbar, button { display: none; }
+      section.block, .meta-row, .para-card, .planner-section-card {
+        border-color: #ccc;
+        break-inside: avoid;
+      }
+      .body-cards-toolbar button { display: none; }
+      button.card-remove,
+      button.card-copy { display: none !important; }
+      .sentence-picker { display: none !important; }
+      .body-cards-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .plan-conclusion-cards {
+        grid-template-columns: 1fr !important;
+      }
+      .planner-section-card,
+      .body-card {
+        display: block !important;
+      }
+      .planner-section-card-head,
+      .body-card-head {
+        border-bottom: 1px solid #ccc;
+      }
+      .section-hint-bubble,
+      .field-pear-bubble {
+        display: block !important;
+        position: static !important;
+        width: auto !important;
+        min-width: 0 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        transition: none !important;
+        box-shadow: none !important;
+        margin-top: 0.35rem;
+        max-width: none !important;
+        pointer-events: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="top-title-row">
+        <h1>Essay &amp; text planner</h1>
+        <span id="save-status" class="save-status" aria-live="polite"></span>
+      </div>
+      <p class="top-subtitle">Australian Curriculum English · v9-aligned text types</p>
+    </header>
+
+    <div class="meta-row" role="group" aria-label="Assignment details">
+      <label>Name <input type="text" id="f-name" autocomplete="name" placeholder="Your name" /></label>
+      <label>Subject / class <input type="text" id="f-subject" placeholder="e.g. Year 10 English" /></label>
+      <label>Topic / question <input type="text" id="f-topic" placeholder="Prompt or title" /></label>
+      <label class="word-count-label">Word count <input type="number" id="f-words" min="0" step="50" placeholder="e.g. 800" /></label>
+      <label>Year band <select id="f-year-band" aria-label="Year level band for PEAR-style guidance" title="Australian Curriculum v9 / QCAA-style bands — shapes analytical body paragraph labels">
+        <option value="78">Years 7–8</option>
+        <option value="910" selected>Years 9–10</option>
+        <option value="1112">Years 11–12</option>
+      </select></label>
+    </div>
+
+    <div class="toolbar">
+      <label class="row-label">Text type
+        <select id="f-type" aria-describedby="type-hint"></select>
+      </label>
+      <button type="button" class="primary" id="btn-copy">Copy outline</button>
+      <button type="button" class="primary" id="btn-email-mrc" title="Opens your email app and copies a formatted version to paste">Email Mr C</button>
+      <button type="button" id="btn-clear">Clear saved</button>
+    </div>
+    <p id="type-hint" style="margin:0 0 1rem;font-size:0.85rem;color:var(--muted)"></p>
+
+    <main id="planner-main"></main>
+  </div>
+
+  <script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "essayplanner-planomy-v1";
+  var MR_C_EMAIL = "achievewriting@gmail.com";
+  var MIN_BODY = 1;
+  var MAX_BODY = 24;
+  var bodyCountMemory = 3;
+  var pendingBodyRestore = null;
+
+  function yearBandValue() {
+    var el = $("f-year-band");
+    return el && el.value ? el.value : "910";
+  }
+
+  function isAnalyticalFamily(typeId) {
+    return typeId === "analytical" || typeId === "comparative" || typeId === "other";
+  }
+
+  /**
+   * Analytical / comparative / “other” body scaffold by AC v9 & QCAA-style achievement bands
+   * (7–8, 9–10, 11–12). Keys align with legacy per-slot migration order.
+   */
+  function bodyAnalyticalSectionPlanByBand(yb) {
+    if (yb === "78") {
+      return [
+        { key: "point", title: "Idea / representation:" },
+        { key: "evidence", title: "Evidence:" },
+        { key: "explanation", title: "Language / text feature:" },
+        { key: "analysis", title: "Effect on audience:" }
+      ];
+    }
+    if (yb === "1112") {
+      return [
+        { key: "point", title: "Argument:" },
+        { key: "evidence", title: "Representation:" },
+        { key: "explanation", title: "Values & beliefs:" },
+        { key: "analysis", title: "Aesthetic effect:" },
+        { key: "evaluation", title: "Evaluation:" }
+      ];
+    }
+    /* Years 9–10 (910) */
+    return [
+      { key: "point", title: "Representation:" },
+      { key: "explanation", title: "Technique:" },
+      { key: "evidence", title: "Perspective:" },
+      { key: "analysis", title: "Audience effect:" }
+    ];
+  }
+
+  /** Scaffold titles (with colon); blank line between each in the saved body string. */
+  function bodySectionPlan(typeId, yearBand) {
+    var yb = yearBand != null ? yearBand : yearBandValue();
+    if (isAnalyticalFamily(typeId)) {
+      return bodyAnalyticalSectionPlanByBand(yb);
+    }
+    if (typeId === "narrative") {
+      return [
+        { key: "plot", title: "Plot:" },
+        { key: "scene", title: "Scene:" },
+        { key: "craft", title: "Craft:" },
+        { key: "theme", title: "Theme:" }
+      ];
+    }
+    if (typeId === "online") {
+      return [
+        { key: "subhead", title: "Subhead:" },
+        { key: "focus", title: "Focus:" },
+        { key: "evidence", title: "Evidence:" },
+        { key: "engagement", title: "Engagement:" },
+        { key: "tone", title: "Tone:" }
+      ];
+    }
+    if (typeId === "persuasive") {
+      return [
+        { key: "topic", title: "Topic:" },
+        { key: "evidence", title: "Evidence:" },
+        { key: "explanation", title: "Explanation:" },
+        { key: "appeals", title: "Appeals:" },
+        { key: "link", title: "Link:" }
+      ];
+    }
+    if (typeId === "informative") {
+      return [
+        { key: "focus", title: "Focus:" },
+        { key: "evidence", title: "Evidence:" },
+        { key: "explanation", title: "Explanation:" },
+        { key: "structure", title: "Structure:" },
+        { key: "link", title: "Link:" }
+      ];
+    }
+    return bodyAnalyticalSectionPlanByBand(yb);
+  }
+
+  function bodyHeadingLines(typeId, yearBand) {
+    return bodySectionPlan(typeId, yearBand).map(function (p) {
+      return p.title;
+    });
+  }
+
+  function buildBodyTemplate(typeId, yearBand) {
+    return bodyHeadingLines(typeId, yearBand).join("\n\n");
+  }
+
+  /** All known label lines for grey styling (includes prior scaffolds so old saves still tint). */
+  function allBodyLabelTitles(typeId) {
+    var seen = {};
+    var out = [];
+    function add(t) {
+      if (!t || seen[t]) return;
+      seen[t] = true;
+      out.push(t);
+    }
+    if (isAnalyticalFamily(typeId)) {
+      ["78", "910", "1112"].forEach(function (yb) {
+        bodySectionPlan(typeId, yb).forEach(function (p) {
+          add(p.title);
+        });
+      });
+      ["Point:", "Explanation:", "Evidence:", "Analysis:"].forEach(add);
+      [
+        "Linked point:",
+        "Evidence — texts:",
+        "Comparison / contrast:",
+        "Evaluation:",
+        "Paragraph focus:",
+        "Development:",
+        "Evidence / examples:",
+        "Significance:"
+      ].forEach(add);
+      return out;
+    }
+    bodySectionPlan(typeId, "910").forEach(function (p) {
+      add(p.title);
+    });
+    return out;
+  }
+
+  function getSuffixes() {
+    return ["body"];
+  }
+
+  /** Academic / non-fiction sentence “jobs” — user builds a numbered plan with + Sentence, then writes under each line. */
+  var SENTENCE_TYPES = [
+    { id: "topic", label: "Topic Sentence", tip: "Opens the paragraph with the main claim" },
+    { id: "explanation", label: "Explanation", tip: "Unpacks or clarifies the idea in plain terms" },
+    { id: "context", label: "Context", tip: "Background or setup before evidence" },
+    { id: "evidence", label: "Evidence", tip: "Quote, example, data, or reference" },
+    { id: "technique", label: "Technique / Feature", tip: "Names the linguistic, aesthetic, or structural device" },
+    { id: "analysis", label: "Analysis", tip: "Unpacks what the evidence or technique does or means" },
+    { id: "cavab", label: "CAVAB", tip: "Cultural assumption, attitude, value, or belief the text reveals" },
+    { id: "effect", label: "Effect on Reader", tip: "How it positions or affects the audience" },
+    { id: "counterargument", label: "Counterargument", tip: "Introduces an opposing view" },
+    { id: "rebuttal", label: "Rebuttal", tip: "Dismantles the counterargument" },
+    { id: "synthesis", label: "Synthesis", tip: "Connects two ideas, texts, or perspectives" },
+    { id: "link", label: "Link", tip: "Closes the paragraph; ties back to thesis" },
+    { id: "takeaway", label: "Takeaway", tip: "Broader significance or key message to leave with the reader" }
+  ];
+
+  /** Narrative fiction sentence “jobs” — action, interiority, scene, voice (seven slots). */
+  var NARRATIVE_SENTENCE_TYPES = [
+    { id: "action", label: "Action", tip: "What happens on the page — movement, gesture, beat" },
+    { id: "thinking", label: "Thinking", tip: "Interior thought — wonder, doubt, memory, planning" },
+    { id: "feeling", label: "Feeling", tip: "Emotion — named or shown through body and reaction" },
+    { id: "description", label: "Description", tip: "Concrete sensory detail — image, texture, sound" },
+    { id: "atmosphere", label: "Atmosphere", tip: "Mood and feel — pace, weather, tension in the air" },
+    { id: "story", label: "Story", tip: "Plot move — obstacle, turn, consequence, time shift" },
+    { id: "dialogue", label: "Dialogue", tip: "Spoken lines — voice, rhythm, what is left unsaid" }
+  ];
+
+  /** Old narrative preset ids — still recognised for grey styling in saved bodies. */
+  var NARRATIVE_LEGACY_SENTENCE_IDS = ["topic", "context", "evidence", "analysis", "effect", "takeaway"];
+
+  /** Years 7–8 analytical typically omits CAVAB in curriculum sequencing (still recognised in saved text). */
+  function analyticalOmitsCavab(yearBand) {
+    return (yearBand != null ? yearBand : yearBandValue()) === "78";
+  }
+
+  function getSentenceTypesForType(typeId, yearBand) {
+    var yb = yearBand != null ? yearBand : yearBandValue();
+    if (typeId === "narrative") return NARRATIVE_SENTENCE_TYPES;
+    if (typeId === "analytical" && analyticalOmitsCavab(yb)) {
+      return SENTENCE_TYPES.filter(function (st) {
+        return st.id !== "cavab";
+      });
+    }
+    return SENTENCE_TYPES;
+  }
+
+  function getSentencePresetIds(typeId, yearBand) {
+    var yb = yearBand != null ? yearBand : yearBandValue();
+    var base = SENTENCE_PRESETS_BY_TYPE[typeId] || SENTENCE_PRESETS_BY_TYPE.other;
+    if (typeId === "analytical" && analyticalOmitsCavab(yb)) {
+      return base.filter(function (id) {
+        return id !== "cavab";
+      });
+    }
+    return base.slice();
+  }
+
+  /** Suggested order of sentence types per text type (students can still pick any type, any order). */
+  var SENTENCE_PRESETS_BY_TYPE = {
+    analytical: ["topic", "context", "evidence", "technique", "analysis", "cavab", "effect", "link"],
+    comparative: ["topic", "synthesis", "evidence", "technique", "analysis", "cavab", "effect", "link"],
+    persuasive: ["topic", "context", "evidence", "explanation", "counterargument", "rebuttal", "link", "takeaway"],
+    informative: ["topic", "context", "evidence", "explanation", "synthesis", "link", "takeaway"],
+    narrative: ["action", "thinking", "feeling", "description", "atmosphere", "story", "dialogue"],
+    online: ["topic", "context", "evidence", "technique", "effect", "link", "takeaway"],
+    other: ["topic", "context", "evidence", "technique", "analysis", "cavab", "effect", "link", "takeaway"]
+  };
+
+  function getSentenceTypeById(id, typeId, yearBand) {
+    var tid =
+      typeId != null
+        ? typeId
+        : $("f-type") && $("f-type").value
+          ? $("f-type").value
+          : "analytical";
+    var yb = yearBand != null ? yearBand : yearBandValue();
+    var list = getSentenceTypesForType(tid, yb);
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) return list[i];
+    }
+    for (var j = 0; j < SENTENCE_TYPES.length; j++) {
+      if (SENTENCE_TYPES[j].id === id) return SENTENCE_TYPES[j];
+    }
+    return null;
+  }
+
+  /** Labels for longest-prefix match (current type + narrative legacy). */
+  function allSentenceLabelsSorted(typeId, yearBand) {
+    var yb = yearBand != null ? yearBand : yearBandValue();
+    var seen = {};
+    var labels = [];
+    function add(lab) {
+      if (!lab || seen[lab]) return;
+      seen[lab] = true;
+      labels.push(lab);
+    }
+    getSentenceTypesForType(typeId, yb).forEach(function (st) {
+      add(st.label);
+    });
+    if (typeId === "analytical" && analyticalOmitsCavab(yb)) {
+      add("CAVAB");
+    }
+    if (typeId === "narrative") {
+      for (var li = 0; li < NARRATIVE_LEGACY_SENTENCE_IDS.length; li++) {
+        for (var sj = 0; sj < SENTENCE_TYPES.length; sj++) {
+          if (SENTENCE_TYPES[sj].id === NARRATIVE_LEGACY_SENTENCE_IDS[li]) {
+            add(SENTENCE_TYPES[sj].label);
+            break;
+          }
+        }
+      }
+    }
+    labels.sort(function (a, b) {
+      return b.length - a.length;
+    });
+    return labels;
+  }
+
+  /**
+   * Optional legacy “N. ” prefix, then a known sentence-type label.
+   * Stored lines use “Label: notes” (no numbers).
+   */
+  function splitSentencePlanLine(trimmed, typeId, yearBand) {
+    var work = trimmed;
+    var numPref = work.match(/^(\d+)\.\s+/);
+    if (numPref) work = work.slice(numPref[0].length);
+    var labels = allSentenceLabelsSorted(typeId, yearBand != null ? yearBand : yearBandValue());
+    for (var i = 0; i < labels.length; i++) {
+      var L = labels[i];
+      if (work.indexOf(L) !== 0) continue;
+      var nextCh = work.charAt(L.length);
+      if (nextCh !== "" && nextCh !== " " && nextCh !== ":") continue;
+      return { label: L, tail: work.slice(L.length) };
+    }
+    return null;
+  }
+
+  function extractSentencePlanNotes(tail) {
+    var notes = "";
+    var colonRest = tail.match(/^\s*:\s*(.*)$/);
+    if (colonRest) notes = colonRest[1];
+    else if (tail && /\S/.test(tail)) notes = tail.replace(/^\s+/, "");
+    return notes;
+  }
+
+  function parseBodyPlainToPlanSegments(plain, typeId, yearBand) {
+    var yb = yearBand != null ? yearBand : yearBandValue();
+    var plans = [];
+    var freeLines = [];
+    var lines = String(plain || "").split(/\n/);
+    for (var i = 0; i < lines.length; i++) {
+      var trimmed = lines[i].trim();
+      if (!trimmed) continue;
+      var sp = splitSentencePlanLine(trimmed, typeId, yb);
+      if (sp) {
+        plans.push({ label: sp.label, note: extractSentencePlanNotes(sp.tail) });
+      } else {
+        freeLines.push(trimmed);
+      }
+    }
+    return { plans: plans, freeLines: freeLines };
+  }
+
+  function shouldUseStructuredBodyEditor(typeId, plain, yearBand) {
+    var p = parseBodyPlainToPlanSegments(plain, typeId, yearBand);
+    return p.plans.length > 0 && p.freeLines.length === 0;
+  }
+
+  function serializeStructuredBodyFromDom(host) {
+    var rows = host.querySelectorAll(".body-plan-row");
+    var parts = [];
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var lab = row.getAttribute("data-label") || "";
+      var ta = row.querySelector("textarea.body-plan-slim-input");
+      var note = ta ? ta.value : "";
+      parts.push(lab + ": " + note);
+    }
+    return parts.join("\n\n");
+  }
+
+  function buildStructuredBodyInnerHtml(bodyId, typeId, plain, yearBand) {
+    var p = parseBodyPlainToPlanSegments(plain, typeId, yearBand);
+    var html = '<div class="body-structured-rows">';
+    for (var i = 0; i < p.plans.length; i++) {
+      var row = p.plans[i];
+      var tid = bodyId + "-row-" + i;
+      html +=
+        '<div class="body-plan-row" data-label="' +
+        esc(row.label) +
+        '">' +
+        '<div class="body-plan-label-row"><span class="body-genre-label body-genre-lead">' +
+        esc(row.label + ": ") +
+        "</span></div>" +
+        '<textarea id="' +
+        esc(tid) +
+        '" class="body-plan-slim-input" rows="1" spellcheck="true" aria-label="' +
+        esc("Notes — " + row.label) +
+        '">' +
+        esc(row.note) +
+        "</textarea></div>";
+    }
+    html += "</div>";
+    return html;
+  }
+
+  /** True when this line is only scaffold (label / “Label:” with no real notes). */
+  function isBareSentencePlanLine(trimmed, typeId, yearBand) {
+    var sp = splitSentencePlanLine(trimmed, typeId, yearBand != null ? yearBand : yearBandValue());
+    if (!sp) return false;
+    var tail = sp.tail;
+    if (!tail || !/\S/.test(tail)) return true;
+    var cm = tail.match(/^\s*:\s*(.*)$/);
+    return !!(cm && !String(cm[1]).trim());
+  }
+
+  /** True when the body is only auto sentence-plan lines (no student notes) — treat as empty on load. */
+  function isOnlyNumberedSentencePlanBody(plain, typeId, yearBand) {
+    var yb = yearBand != null ? yearBand : yearBandValue();
+    var text = plain == null ? "" : String(plain).trim();
+    if (text === "") return false;
+    var lines = text.split(/\n/);
+    var any = false;
+    for (var li = 0; li < lines.length; li++) {
+      var t = lines[li].trim();
+      if (t === "") continue;
+      any = true;
+      if (!isBareSentencePlanLine(t, typeId, yb)) return false;
+    }
+    return any;
+  }
+
+  function positionSentencePicker(picker, bodyId) {
+    if (!picker || picker.hidden) return;
+    var escSel = String(bodyId).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    var toolbar = document.querySelector('.sentence-toolbar[data-body-toolbar="' + escSel + '"]');
+    var bodyEl = document.getElementById(bodyId);
+    var pad = 10;
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var pw = Math.min(440, vw - 2 * pad);
+    picker.style.width = pw + "px";
+
+    /* Horizontal: place picker so its left edge meets the paragraph’s horizontal centre.
+       That keeps the paragraph’s left half to the left of the picker (uncovered). If the
+       box would cross the right edge of the window, slide it left (viewport clamp). */
+    var left;
+    if (bodyEl) {
+      var br = bodyEl.getBoundingClientRect();
+      var cx = br.left + br.width / 2;
+      left = cx;
+      if (left + pw > vw - pad) left = vw - pw - pad;
+      if (left < pad) left = pad;
+    } else {
+      left = Math.max(pad, (vw - pw) / 2);
+    }
+
+    var top = Math.max(pad, (vh - 420) / 2);
+    if (toolbar) {
+      var tr = toolbar.getBoundingClientRect();
+      top = tr.bottom + 8;
+    }
+    picker.style.left = left + "px";
+    picker.style.top = top + "px";
+    var ph = picker.offsetHeight || 0;
+    if (ph > 0 && top + ph > vh - pad) {
+      top = Math.max(pad, vh - ph - pad);
+      picker.style.top = top + "px";
+    }
+  }
+
+  function repositionOpenSentencePicker() {
+    var open = document.querySelector("#planner-main .sentence-picker:not([hidden])");
+    if (!open) return;
+    var bid = open.getAttribute("data-body-picker");
+    if (bid) positionSentencePicker(open, bid);
+  }
+
+  var sentencePickerLayoutBound = false;
+  function bindSentencePickerLayout() {
+    if (sentencePickerLayoutBound) return;
+    sentencePickerLayoutBound = true;
+    window.addEventListener("resize", repositionOpenSentencePicker);
+    window.addEventListener("scroll", repositionOpenSentencePicker, true);
+  }
+
+  function closeAllSentencePickers() {
+    var main = $("planner-main");
+    if (!main) return;
+    main.querySelectorAll(".sentence-picker").forEach(function (p) {
+      p.hidden = true;
+    });
+  }
+
+  function toggleSentencePicker(bodyId) {
+    var main = $("planner-main");
+    if (!main) return;
+    var picker = main.querySelector('.sentence-picker[data-body-picker="' + bodyId + '"]');
+    if (!picker) return;
+    var opening = picker.hidden;
+    closeAllSentencePickers();
+    picker.hidden = !opening;
+    if (!picker.hidden) {
+      bindSentencePickerLayout();
+      requestAnimationFrame(function () {
+        positionSentencePicker(picker, bodyId);
+      });
+    }
+  }
+
+  function getSentencePickerForBody(bodyId) {
+    var main = $("planner-main");
+    if (!main) return null;
+    return main.querySelector('.sentence-picker[data-body-picker="' + bodyId + '"]');
+  }
+
+  function sentencePlannerTypeFromPicker(picker) {
+    if (!picker) return ($("f-type") && $("f-type").value) || "analytical";
+    var t = picker.getAttribute("data-sentence-type-id");
+    return t || (($("f-type") && $("f-type").value) || "analytical");
+  }
+
+  function clearAllSentenceSlots(picker) {
+    if (!picker) return;
+    var planType = sentencePlannerTypeFromPicker(picker);
+    var ybSlot = $("f-year-band") ? $("f-year-band").value : "910";
+    picker.querySelectorAll(".sentence-slot").forEach(function (slot) {
+      slot.removeAttribute("data-num");
+      slot.textContent = "";
+      var sid = slot.getAttribute("data-sentence");
+      var st = getSentenceTypeById(sid, planType, ybSlot);
+      slot.setAttribute(
+        "aria-label",
+        st ? "Order slot — click to assign next number, click again to clear — " + st.label : "Order slot"
+      );
+    });
+  }
+
+  function getMaxAssignedSlotNumber(picker) {
+    var max = 0;
+    if (!picker) return max;
+    picker.querySelectorAll(".sentence-slot[data-num]").forEach(function (slot) {
+      var v = parseInt(slot.getAttribute("data-num"), 10);
+      if (!isNaN(v)) max = Math.max(max, v);
+    });
+    return max;
+  }
+
+  function toggleSentenceSlot(slotBtn, picker) {
+    var planType = sentencePlannerTypeFromPicker(picker);
+    var ybSlot = $("f-year-band") ? $("f-year-band").value : "910";
+    var cur = slotBtn.getAttribute("data-num");
+    if (cur != null && cur !== "" && String(cur).trim() !== "") {
+      slotBtn.removeAttribute("data-num");
+      slotBtn.textContent = "";
+      var sid0 = slotBtn.getAttribute("data-sentence");
+      var st0 = getSentenceTypeById(sid0, planType, ybSlot);
+      slotBtn.setAttribute(
+        "aria-label",
+        st0 ? "Order slot — click to assign next number, click again to clear — " + st0.label : "Order slot"
+      );
+      return;
+    }
+    var next = getMaxAssignedSlotNumber(picker) + 1;
+    slotBtn.setAttribute("data-num", String(next));
+    slotBtn.textContent = String(next);
+    var sid = slotBtn.getAttribute("data-sentence");
+    var st = getSentenceTypeById(sid, planType, ybSlot);
+    slotBtn.setAttribute(
+      "aria-label",
+      st ? "Order " + next + " — " + st.label + " (click to clear)" : "Order " + next
+    );
+  }
+
+  /** Compact assigned numbers to 1…n in sort order, then write “Label: ” lines (slim row UI when rendered). */
+  function applySentenceSlotsToBody(bodyId) {
+    var picker = getSentencePickerForBody(bodyId);
+    if (!picker) return;
+    var pairs = [];
+    var planType = sentencePlannerTypeFromPicker(picker);
+    var ybSlot = $("f-year-band") ? $("f-year-band").value : "910";
+    picker.querySelectorAll(".sentence-slot").forEach(function (slot) {
+      var num = slot.getAttribute("data-num");
+      if (num == null || String(num).trim() === "" || isNaN(parseInt(num, 10))) return;
+      var sid = slot.getAttribute("data-sentence");
+      var st = getSentenceTypeById(sid, planType, ybSlot);
+      if (!st) return;
+      pairs.push({ num: parseInt(num, 10), label: st.label });
+    });
+    if (!pairs.length) {
+      closeAllSentencePickers();
+      return;
+    }
+    pairs.sort(function (a, b) {
+      return a.num - b.num;
+    });
+    var lines = [];
+    for (var j = 0; j < pairs.length; j++) {
+      lines.push(pairs[j].label + ": ");
+    }
+    var block = lines.join("\n\n");
+    var el = document.getElementById(bodyId);
+    if (!el || !isBodyUnifiedEditor(el)) return;
+    var typeId = $("f-type").value;
+    var yb = $("f-year-band") ? $("f-year-band").value : "910";
+    var plain = readAutosaveValue(el);
+    var newPlain = plain.trim() ? plain.replace(/\s+$/, "") + "\n\n" + block : block;
+    writeAutosaveBodyHtml(el, typeId, newPlain, yb);
+    saveAll();
+    clearAllSentenceSlots(picker);
+    closeAllSentencePickers();
+  }
+
+  function fillSentencePresetSlots(bodyId, typeId) {
+    closeAllSentencePickers();
+    var picker = getSentencePickerForBody(bodyId);
+    if (!picker) return;
+    clearAllSentenceSlots(picker);
+    var ybPreset = $("f-year-band") ? $("f-year-band").value : "910";
+    var preset = getSentencePresetIds(typeId, ybPreset);
+    for (var pi = 0; pi < preset.length; pi++) {
+      var slot = picker.querySelector('.sentence-slot[data-sentence="' + preset[pi] + '"]');
+      if (!slot) continue;
+      var n = pi + 1;
+      slot.setAttribute("data-num", String(n));
+      slot.textContent = String(n);
+      var st = getSentenceTypeById(preset[pi], typeId, ybPreset);
+      if (st) {
+        slot.setAttribute("aria-label", "Order " + n + " — " + st.label + " (click to clear)");
+      }
+    }
+    picker.hidden = false;
+    bindSentencePickerLayout();
+    requestAnimationFrame(function () {
+      positionSentencePicker(picker, bodyId);
+    });
+  }
+
+  function renderSentenceToolbarHtml(bodyId, typeId) {
+    var ybTool = yearBandValue();
+    var planTypes = getSentenceTypesForType(typeId, ybTool);
+    var rows = "";
+    for (var si = 0; si < planTypes.length; si++) {
+      var st = planTypes[si];
+      rows +=
+        '<div class="sentence-picker-row">' +
+        '<div class="st-label-wrap"><span class="st-label">' +
+        esc(st.label) +
+        '</span><span class="st-tip">' +
+        esc(st.tip) +
+        "</span></div>" +
+        '<button type="button" class="sentence-slot" data-body="' +
+        esc(bodyId) +
+        '" data-sentence="' +
+        esc(st.id) +
+        "\" aria-label=\"Order slot — click to assign next number, click again to clear — " +
+        esc(st.label) +
+        '"></button></div>';
+    }
+    return (
+      '<div class="sentence-toolbar" data-body-toolbar="' +
+      esc(bodyId) +
+      '" data-sentence-type-id="' +
+      esc(typeId) +
+      '">' +
+      '<button type="button" class="btn-add-sentence" data-body="' +
+      esc(bodyId) +
+      '">+ Sentence</button>' +
+      '<button type="button" class="btn-sentence-preset" data-body="' +
+      esc(bodyId) +
+      "\">Suggested structure</button>" +
+      '<div class="sentence-picker" data-body-picker="' +
+      esc(bodyId) +
+      '" data-sentence-type-id="' +
+      esc(typeId) +
+      '" hidden>' +
+      '<div class="sentence-picker-head"><span>Order sentence types</span>' +
+      '<div class="sentence-picker-actions">' +
+      '<button type="button" class="btn-sentence-done" data-body="' +
+      esc(bodyId) +
+      '">Done</button>' +
+      '<button type="button" class="sentence-picker-close" data-body="' +
+      esc(bodyId) +
+      "\" aria-label=\"Close without applying\">×</button>" +
+      "</div></div>" +
+      '<div class="sentence-picker-grid">' +
+      rows +
+      "</div></div></div>"
+    );
+  }
+
+  var sentenceToolbarDocClickBound = false;
+  function bindSentenceToolbar() {
+    if (sentenceToolbarDocClickBound) return;
+    sentenceToolbarDocClickBound = true;
+    document.addEventListener(
+      "click",
+      function (e) {
+        var main = $("planner-main");
+        if (!main) return;
+        var t = e.target;
+        if (!main.contains(t)) return;
+
+        var slot = t.closest && t.closest(".sentence-slot");
+        if (slot) {
+          e.preventDefault();
+          e.stopPropagation();
+          var pickerEl = slot.closest(".sentence-picker");
+          if (pickerEl) toggleSentenceSlot(slot, pickerEl);
+          return;
+        }
+
+        var doneBtn = t.closest && t.closest(".btn-sentence-done");
+        if (doneBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          var bodyDone = doneBtn.getAttribute("data-body");
+          if (bodyDone) applySentenceSlotsToBody(bodyDone);
+          return;
+        }
+
+        var presetBtn = t.closest && t.closest(".btn-sentence-preset");
+        if (presetBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          var bid = presetBtn.getAttribute("data-body");
+          if (bid) fillSentencePresetSlots(bid, $("f-type").value);
+          return;
+        }
+
+        var addBtn = t.closest && t.closest(".btn-add-sentence");
+        if (addBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          var b = addBtn.getAttribute("data-body");
+          if (b) toggleSentencePicker(b);
+          return;
+        }
+
+        var cls = t.closest && t.closest(".sentence-picker-close");
+        if (cls) {
+          e.preventDefault();
+          e.stopPropagation();
+          var bidClose = cls.getAttribute("data-body");
+          if (bidClose) {
+            var pClose = getSentencePickerForBody(bidClose);
+            if (pClose) clearAllSentenceSlots(pClose);
+          }
+          closeAllSentencePickers();
+          return;
+        }
+
+        if (!t.closest || !t.closest(".sentence-toolbar")) {
+          closeAllSentencePickers();
+        }
+      },
+      true
+    );
+  }
+
+  /** Field keys from the previous multi-textarea body cards (for migrating saved plans). */
+  function legacySuffixList(typeId) {
+    if (typeId === "persuasive") return ["point", "evidence", "appeals", "devices", "bridge"];
+    if (typeId === "informative") return ["point", "evidence", "structure", "terms", "bridge"];
+    if (typeId === "narrative") return ["events", "detail", "devices", "theme"];
+    if (typeId === "online") return ["subhead", "point", "evidence", "engagement", "tone"];
+    return ["point", "evidence", "aesthetic", "intent", "audience"];
+  }
+
+  function legacySectionTitle(typeId, suf) {
+    var map = {
+      point: "POINT",
+      evidence: "EVIDENCE",
+      appeals: "APPEALS",
+      devices: "DEVICES",
+      bridge: "LINK",
+      structure: "STRUCTURE",
+      terms: "TERMS",
+      events: "PLOT",
+      detail: "SCENE",
+      subhead: "SUBHEAD",
+      engagement: "ENGAGEMENT",
+      tone: "TONE",
+      aesthetic: "ANALYSIS",
+      intent: "INTENT",
+      audience: "AUDIENCE"
+    };
+    if (suf === "theme" && typeId === "narrative") return "THEME / CHARACTER";
+    if (suf === "devices" && typeId === "narrative") return "CRAFT";
+    return map[suf] || String(suf).toUpperCase();
+  }
+
+  function mergeLegacyParagraphPlan(typeId, fields, idx1, yearBand) {
+    var prefix = "p" + idx1 + "-";
+    var yb = yearBand != null ? yearBand : yearBandValue();
+    var plan = bodySectionPlan(typeId, yb);
+    var bodyKey = prefix + "body";
+
+    function aliasOld(oldKey, newKey) {
+      var from = prefix + oldKey;
+      var to = prefix + newKey;
+      if (fields[from] != null && String(fields[from]).trim() !== "") {
+        if (fields[to] == null || String(fields[to]).trim() === "") {
+          fields[to] = fields[from];
+        }
+      }
+    }
+
+    if (typeId === "persuasive") {
+      aliasOld("point", "topic");
+      aliasOld("bridge", "link");
+      var pd = fields[prefix + "devices"];
+      var pexp = fields[prefix + "explanation"];
+      if (pd != null && String(pd).trim() !== "" && (!pexp || String(pexp).trim() === "")) {
+        fields[prefix + "explanation"] = pd;
+      }
+    }
+    if (typeId === "informative") {
+      aliasOld("point", "focus");
+      aliasOld("bridge", "link");
+      var tm = fields[prefix + "terms"];
+      var st = fields[prefix + "structure"];
+      if (tm != null && String(tm).trim() !== "" && (!st || String(st).trim() === "")) {
+        fields[prefix + "structure"] = tm;
+      }
+    }
+    if (typeId === "online") {
+      aliasOld("point", "focus");
+    }
+    if (typeId === "narrative") {
+      aliasOld("events", "plot");
+      aliasOld("detail", "scene");
+      aliasOld("devices", "craft");
+    }
+
+    if (typeId === "analytical" || typeId === "comparative" || typeId === "other") {
+      aliasOld("aesthetic", "analysis");
+    }
+
+    var ai = fields[prefix + "intent"];
+    var aa = fields[prefix + "audience"];
+    var ax = fields[prefix + "analysis"];
+    if (
+      (typeId === "analytical" || typeId === "comparative" || typeId === "other") &&
+      ((ai != null && String(ai).trim() !== "") || (aa != null && String(aa).trim() !== ""))
+    ) {
+      var tail = [ai, aa].filter(Boolean).join("\n\n");
+      if (tail && (ax == null || String(ax).trim() === "")) {
+        fields[prefix + "analysis"] = tail;
+      }
+    }
+
+    if (fields[bodyKey] != null && String(fields[bodyKey]).trim() !== "") {
+      return;
+    }
+
+    var firstKey = plan[0].key;
+    var firstVal = fields[prefix + firstKey];
+    if (firstVal != null && String(firstVal).trim() !== "") {
+      var fv = String(firstVal).trim();
+      if (fv.indexOf("\n") !== -1 || /^\[/.test(fv)) {
+        fields[bodyKey] = fv;
+        return;
+      }
+    }
+
+    var parts = [];
+    for (var pi = 0; pi < plan.length; pi++) {
+      var pk = plan[pi].key;
+      var title = plan[pi].title;
+      var pv = fields[prefix + pk];
+      if (pv != null && String(pv).trim() !== "") {
+        parts.push(title + "\n\n" + String(pv).trim());
+      }
+    }
+    if (parts.length) {
+      fields[bodyKey] = parts.join("\n\n");
+      return;
+    }
+
+    var legacy = legacySuffixList(typeId);
+    var legacyParts = [];
+    for (var li = 0; li < legacy.length; li++) {
+      var suf = legacy[li];
+      var lk = prefix + suf;
+      var lv = fields[lk];
+      if (lv != null && String(lv).trim() !== "") {
+        legacyParts.push("[" + legacySectionTitle(typeId, suf) + "]\n\n" + String(lv).trim());
+      }
+    }
+    if (legacyParts.length) {
+      fields[bodyKey] = legacyParts.join("\n\n");
+    }
+
+    /* Empty string was often saved from autosave after a blank textarea — refill headings. */
+    var curBody = fields[bodyKey];
+    if (
+      !Object.prototype.hasOwnProperty.call(fields, bodyKey) ||
+      curBody == null ||
+      String(curBody).trim() === ""
+    ) {
+      fields[bodyKey] = "";
+    }
+  }
+
+  /** Highest N with saved pN-body (fixes bodySlotCount out of sync with field keys). */
+  function inferMaxBodyIndexFromFields(fields) {
+    var max = 0;
+    Object.keys(fields || {}).forEach(function (id) {
+      var m = id.match(/^p(\d+)-body$/);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    });
+    return max;
+  }
+
+  function inferMaxBodyIndexFromDom() {
+    var max = 0;
+    document.querySelectorAll("[id]").forEach(function (el) {
+      if (!el.id) return;
+      var m = el.id.match(/^p(\d+)-body$/);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    });
+    return max;
+  }
+
+  function collectBodyData(n) {
+    var suf = getSuffixes();
+    var arr = [];
+    for (var i = 0; i < n; i++) {
+      var o = {};
+      var prefix = "p" + (i + 1) + "-";
+      for (var s = 0; s < suf.length; s++) {
+        var id = prefix + suf[s];
+        var el = document.getElementById(id);
+        o[suf[s]] = el ? readAutosaveValue(el) : "";
+      }
+      arr.push(o);
+    }
+    return arr;
+  }
+
+  function applyBodyData(arr) {
+    var suf = getSuffixes();
+    var typeId = $("f-type").value;
+    for (var i = 0; i < arr.length; i++) {
+      var o = arr[i];
+      var prefix = "p" + (i + 1) + "-";
+      for (var s = 0; s < suf.length; s++) {
+        var id = prefix + suf[s];
+        var el = document.getElementById(id);
+        var val = o[suf[s]];
+        if (!el || val == null) continue;
+        if (isBodyUnifiedEditor(el)) {
+          writeAutosaveBodyHtml(el, typeId, String(val), $("f-year-band").value);
+        } else {
+          el.value = val;
+        }
+      }
+    }
+  }
+
+  function insertParagraphAfter(afterIdx) {
+    var typeId = $("f-type").value;
+    var n = bodyCountMemory;
+    var arr = collectBodyData(n);
+    var empty = { body: "" };
+    if (afterIdx === -1) {
+      arr.push(empty);
+    } else {
+      arr.splice(afterIdx + 1, 0, empty);
+    }
+    if (arr.length > MAX_BODY) {
+      setSaveStatus("Maximum " + MAX_BODY + " body paragraphs");
+      setTimeout(function () {
+        setSaveStatus("");
+      }, 2500);
+      return;
+    }
+    bodyCountMemory = arr.length;
+    pendingBodyRestore = arr;
+    renderMain();
+    saveAll();
+  }
+
+  function deleteBodyParagraph(idx) {
+    if (!confirm("Remove this paragraph? Any notes in it will be lost.")) return;
+    var typeId = $("f-type").value;
+    var n = bodyCountMemory;
+    if (n <= MIN_BODY) {
+      setSaveStatus("Keep at least one body paragraph");
+      setTimeout(function () {
+        setSaveStatus("");
+      }, 2200);
+      return;
+    }
+    var arr = collectBodyData(n);
+    arr.splice(idx, 1);
+    bodyCountMemory = arr.length;
+    pendingBodyRestore = arr;
+    renderMain();
+    saveAll();
+  }
+
+  /** Inserts a new body card immediately after `idx` with the same paragraph text. */
+  function duplicateBodyParagraph(idx) {
+    var typeId = $("f-type").value;
+    var n = bodyCountMemory;
+    var arr = collectBodyData(n);
+    if (idx < 0 || idx >= arr.length) return;
+    var copyBody = arr[idx].body != null ? String(arr[idx].body) : "";
+    var clone = { body: copyBody };
+    arr.splice(idx + 1, 0, clone);
+    if (arr.length > MAX_BODY) {
+      setSaveStatus("Maximum " + MAX_BODY + " body paragraphs");
+      setTimeout(function () {
+        setSaveStatus("");
+      }, 2500);
+      return;
+    }
+    bodyCountMemory = arr.length;
+    pendingBodyRestore = arr;
+    renderMain();
+    saveAll();
+  }
+
+  /** Clicks on button label text often hit a Text node — it has no .closest(). */
+  function clickTargetElement(e) {
+    var t = e.target;
+    if (t && t.nodeType === 1) return t;
+    return t && t.parentElement ? t.parentElement : null;
+  }
+
+  function bindAddParagraphButton() {
+    var btn = document.getElementById("btn-add-paragraph-end");
+    if (!btn) return;
+    btn.onclick = function (ev) {
+      if (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      insertParagraphAfter(-1);
+    };
+  }
+
+  /** Capture phase so card head controls do not toggle details or hit wrong targets. */
+  function cardRemoveClickCapture(e) {
+    var el = clickTargetElement(e);
+    if (!el) return;
+    var main = document.getElementById("planner-main");
+    if (!main || !main.contains(el)) return;
+    var cp = el.closest(".card-copy");
+    if (cp) {
+      e.preventDefault();
+      e.stopPropagation();
+      var cix = parseInt(cp.getAttribute("data-copy"), 10);
+      if (!isNaN(cix)) duplicateBodyParagraph(cix);
+      return;
+    }
+    var rm = el.closest(".card-remove");
+    if (!rm) return;
+    if (!main.contains(rm)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var idx = parseInt(rm.getAttribute("data-remove"), 10);
+    if (!isNaN(idx)) deleteBodyParagraph(idx);
+  }
+
+  document.addEventListener("click", cardRemoveClickCapture, true);
+
+  var TEXT_TYPES = [
+    {
+      id: "analytical",
+      label: "Analytical / response (essay)",
+      hint: "Literature or multimodal analysis — thesis, evidence, close reading.",
+      pct: { intro: [0.10, 0.15], conclusion: [0.10, 0.15] }
+    },
+    {
+      id: "informative",
+      label: "Informative / explanatory (essay)",
+      hint: "Explanation-focused body prompts — not literary CAVABS or author analysis.",
+      pct: { intro: [0.10, 0.15], conclusion: [0.10, 0.15] }
+    },
+    {
+      id: "persuasive",
+      label: "Persuasive / argument",
+      hint: "Each reason plans evidence plus ethos/pathos/logos and techniques (not literary CAVABS).",
+      pct: { intro: [0.08, 0.13], conclusion: [0.12, 0.18] }
+    },
+    {
+      id: "online",
+      label: "Online article / feature (written)",
+      hint: "Headline, angle, sections, links/sources, tone, and reader engagement.",
+      pct: { intro: [0.08, 0.12], conclusion: [0.08, 0.12] }
+    },
+    {
+      id: "narrative",
+      label: "Narrative / imaginative",
+      hint: "Sections are labelled by story arc (rising action → crisis → climax → resolution) based on how many you choose.",
+      pct: { intro: [0.10, 0.15], conclusion: [0.10, 0.15] }
+    },
+    {
+      id: "comparative",
+      label: "Comparative analysis (two+ texts)",
+      hint: "Thesis links texts; each paragraph often weaves comparison with evidence.",
+      pct: { intro: [0.10, 0.14], conclusion: [0.10, 0.15] }
+    },
+    {
+      id: "other",
+      label: "Other",
+      hint: "Describe the task below — body paragraphs use the general analytical-style planner.",
+      pct: { intro: [0.10, 0.15], conclusion: [0.10, 0.15] }
+    }
+  ];
+
+  function $(id) { return document.getElementById(id); }
+
+  function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+
+  function roundRange(lo, hi) {
+    return { lo: Math.round(lo), hi: Math.round(hi) };
+  }
+
+  function formatRange(r) {
+    if (r.lo === r.hi) return String(r.lo);
+    return r.lo + "–" + r.hi;
+  }
+
+  function getTypeMeta(id) {
+    for (var i = 0; i < TEXT_TYPES.length; i++) {
+      if (TEXT_TYPES[i].id === id) return TEXT_TYPES[i];
+    }
+    return TEXT_TYPES[0];
+  }
+
+  function computeBudget(total, typeId, bodyCount) {
+    if (!total || total < 50) return null;
+    var t = getTypeMeta(typeId);
+    var ip = t.pct.intro;
+    var cp = t.pct.conclusion;
+    var intro = roundRange(total * ip[0], total * ip[1]);
+    var conclusion = roundRange(total * cp[0], total * cp[1]);
+    var bodyTotalLo = Math.max(0, total - intro.hi - conclusion.hi);
+    var bodyTotalHi = Math.max(0, total - intro.lo - conclusion.lo);
+    var n = clamp(bodyCount || 3, MIN_BODY, MAX_BODY);
+    var perLo = bodyTotalLo / n;
+    var perHi = bodyTotalHi / n;
+    var per = roundRange(Math.min(perLo, perHi), Math.max(perLo, perHi));
+    return { intro: intro, bodyEach: per, bodyN: n, conclusion: conclusion, total: total };
+  }
+
+  function esc(s) {
+    if (!s) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function isBodyUnifiedEditor(el) {
+    return !!(el && el.classList && el.classList.contains("body-unified-editor"));
+  }
+
+  /** Map a trimmed line to a known scaffold label (with colon) for grey styling, or null. */
+  function canonicalGenreLabelLine(typeId, trimmed, yearBand) {
+    var labels = allBodyLabelTitles(typeId);
+    var yb = yearBand != null ? yearBand : yearBandValue();
+    var prefer = bodyHeadingLines(typeId, yb);
+    var ordered = prefer.concat(
+      labels.filter(function (L) {
+        return prefer.indexOf(L) === -1;
+      })
+    );
+    for (var i = 0; i < ordered.length; i++) {
+      var L = ordered[i];
+      if (trimmed === L) return L;
+      if (trimmed === L.replace(/:$/, "")) return L;
+    }
+    return null;
+  }
+
+  /** Plain body text → HTML with grey genre labels (saved format stays plain text). Not used when structured slim rows are active. */
+  function plainBodyToRichHtml(typeId, plain, yearBand) {
+    var yb = yearBand != null ? yearBand : yearBandValue();
+    var text = plain == null ? "" : String(plain);
+    if (!text.trim()) {
+      return "";
+    }
+    var lines = text.split(/\n/);
+    var out = [];
+    for (var j = 0; j < lines.length; j++) {
+      var line = lines[j];
+      var trimmed = line.trim();
+      var planSplit = splitSentencePlanLine(trimmed, typeId, yb);
+      if (planSplit) {
+        var notes = extractSentencePlanNotes(planSplit.tail);
+        out.push(
+          '<span class="body-genre-label body-genre-lead">' + esc(planSplit.label + ": ") + "</span>"
+        );
+        if (notes) {
+          out.push('<span class="body-plan-note">' + esc(notes) + "</span>");
+        }
+        continue;
+      }
+      var canon = canonicalGenreLabelLine(typeId, trimmed, yb);
+      if (canon) {
+        out.push('<span class="body-genre-label">' + esc(canon) + "</span>");
+      } else {
+        out.push(line === "" ? "" : esc(line));
+      }
+    }
+    return out.join("<br>");
+  }
+
+  function readAutosaveValue(el) {
+    if (!isBodyUnifiedEditor(el)) return el.value;
+    if (el.classList.contains("body-structured-host")) {
+      return serializeStructuredBodyFromDom(el);
+    }
+    return el.innerText;
+  }
+
+  function writeAutosaveBodyHtml(el, typeId, plain, yearBand) {
+    var yb = yearBand != null ? yearBand : yearBandValue();
+    var plainStr = plain == null ? "" : String(plain);
+    if (shouldUseStructuredBodyEditor(typeId, plainStr, yb)) {
+      el.classList.add("body-structured-host");
+      el.removeAttribute("contenteditable");
+      el.setAttribute("aria-multiline", "true");
+      el.innerHTML = buildStructuredBodyInnerHtml(el.id, typeId, plainStr, yb);
+      return;
+    }
+    el.classList.remove("body-structured-host");
+    el.setAttribute("contenteditable", "true");
+    el.setAttribute("aria-multiline", "true");
+    el.innerHTML = plainBodyToRichHtml(typeId, plainStr, yb);
+  }
+
+  /** Plain text for HTML title attributes on labels (hints may contain simple entities). */
+  function plainHintForTitle(h) {
+    if (!h) return "";
+    return String(h)
+      .replace(/<[^>]*>/g, "")
+      .replace(/&rsquo;/g, "\u2019")
+      .replace(/&ldquo;/g, "\u201C")
+      .replace(/&rdquo;/g, "\u201D")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">");
+  }
+
+  function labelTitleAttr(hint) {
+    if (!hint) return "";
+    return ' title="' + esc(plainHintForTitle(hint)) + '"';
+  }
+
+  function wrapSectionHintBubble(innerHtml) {
+    return (
+      '<span class="section-hint-bubble" role="tooltip">' +
+      '<span class="section-hint-bubble-inner">' +
+      innerHtml +
+      "</span></span>"
+    );
+  }
+
+  function sectionTitleWithHint(visibleTitle, bubbleInnerHtml) {
+    return (
+      '<span class="section-hint-host" tabindex="0">' +
+      '<span class="section-title-text">' +
+      esc(visibleTitle) +
+      "</span>" +
+      wrapSectionHintBubble(bubbleInnerHtml) +
+      "</span>"
+    );
+  }
+
+  function buildPlanSectionBubbleInner(typeId, thesisHintHtml) {
+    var rows = [];
+    rows.push("<li><strong>Opening</strong> — How you’ll grab attention and set up the piece.</li>");
+    rows.push("<li><strong>Main focus</strong> — " + thesisHintHtml + "</li>");
+    if (typeId !== "narrative") {
+      rows.push("<li><strong>Points</strong> — One bullet per body paragraph (what each block will cover).</li>");
+    }
+    if (typeId === "other") {
+      rows.push("<li><strong>Text type</strong> — What kind of task this is, in your own words.</li>");
+    }
+    if (typeId === "persuasive") {
+      rows.push("<li><strong>Persuasion notes</strong> — Audience, counter-arguments, and how you’ll answer them (use the fields below).</li>");
+    }
+    if (typeId === "online") {
+      rows.push("<li><strong>Web packaging</strong> — Headline, deck, and call-to-action ideas (fields below).</li>");
+    }
+    if (typeId === "narrative") {
+      rows.push("<li><strong>Story setup</strong> — Narrator, setting, conflict, structure (fields below).</li>");
+    }
+    return '<ul class="hint-popover-list">' + rows.join("") + "</ul>";
+  }
+
+  function buildConcSectionBubbleInner(typeId) {
+    var t =
+      typeId === "persuasive"
+        ? "Restate your stance, answer &ldquo;so what?&rdquo;, and avoid brand-new evidence."
+        : typeId === "online"
+          ? "Tie the piece together; optional final call to action or reflection."
+          : typeId === "narrative"
+            ? "Resolve or echo the story — image, feeling, or idea — without a surprise that wasn’t set up."
+            : typeId === "informative"
+              ? "Summarise what matters most; leave the reader with a clear takeaway or next step."
+              : typeId === "other"
+                ? "Wrap up in a way that fits your task."
+                : typeId === "comparative"
+                  ? "Bring the texts together in one insight — avoid two disconnected endings."
+                  : "Sum up your line of argument; don’t add new points at the end.";
+    return "<p>" + t + "</p>";
+  }
+
+  function persuasiveToolkitBlock() {
+    return (
+      "<details class=\"planner-fold\">" +
+      "<summary>Persuasive toolkit (use deliberately, not randomly)</summary>" +
+      "<p><strong>Appeals:</strong> <em>Ethos</em> — credibility, tone, fair framing; <em>Pathos</em> — values, story, vivid detail (avoid manipulation); " +
+      "<em>Logos</em> — reasons, evidence, cause–effect, criteria.</p>" +
+      "<p><strong>Techniques:</strong> rhetorical question; anecdote; statistic or expert voice; analogy; contrast; repetition / parallel structure / rule of three; " +
+      "inclusive language (<em>we</em>, <em>us</em>); concession + refutation; call to action; humour (if appropriate).</p>" +
+      "<p>Match the device to the job: e.g. logos for a doubtful reader, pathos after you&rsquo;ve earned trust, ethos in how you handle counter-voices.</p>" +
+      "</details>"
+    );
+  }
+
+  function field(id, prompt, hint, extraClass) {
+    return (
+      "<div class=\"field " + (extraClass || "") + "\">" +
+      "<label class=\"prompt\" for=\"" +
+      esc(id) +
+      "\"" +
+      labelTitleAttr(hint) +
+      ">" +
+      prompt +
+      "</label>" +
+      "<textarea id=\"" + esc(id) + "\" data-autosave></textarea></div>"
+    );
+  }
+
+  function fieldInput(id, prompt, hint, placeholder) {
+    var ph = placeholder != null ? placeholder : "";
+    return (
+      "<div class=\"field\">" +
+      "<label class=\"prompt\" for=\"" +
+      esc(id) +
+      "\"" +
+      labelTitleAttr(hint) +
+      ">" +
+      prompt +
+      "</label>" +
+      '<input type="text" id="' +
+      esc(id) +
+      "\" data-autosave autocomplete=\"off\" placeholder=\"" +
+      esc(ph) +
+      "\" /></div>"
+    );
+  }
+
+  /**
+   * Arc-aware titles and questions for narrative middle sections (Australian Curriculum: orientation, complication, climax, resolution).
+   */
+  function narrativeBeat(index, total) {
+    var i = index;
+    var n = Math.max(1, total | 0);
+    var last = n - 1;
+    var role;
+    var heading;
+    var tagline;
+
+    if (n === 1) {
+      role = "single";
+      heading = "Middle — build the story";
+      tagline = "One continuous block: move from your opening situation toward the change you promise in the ending.";
+    } else if (n === 2) {
+      role = i === 1 ? "resolution" : "rising";
+      heading = i === 0 ? "Complication / rising tension" : "Resolution / denouement";
+      tagline =
+        i === 0
+          ? "Disturb the status quo; deepen the problem, desire, or dilemma."
+          : "Land the outcome; show what shifted in the world, a relationship, or the self.";
+    } else if (n === 3) {
+      if (i === 0) {
+        role = "rising";
+        heading = "Rising action";
+        tagline = "Complications, choices, and rising stakes after your opening.";
+      } else if (i === 1) {
+        role = "climax";
+        heading = "Climax / turning point";
+        tagline = "Peak tension — the moment that decides how things will end.";
+      } else {
+        role = "resolution";
+        heading = "Falling action & resolution";
+        tagline = "Consequences, release, and a final image or thought.";
+      }
+    } else if (n === 4) {
+      var row4 = [
+        { role: "rising", h: "Rising action — early", t: "Establish the new situation; first real pushes against what the protagonist wants." },
+        { role: "rising", h: "Rising action — escalation", t: "Stakes rise — setback, revelation, or a point of no return." },
+        { role: "climax", h: "Climax / crisis", t: "The decisive confrontation, choice, or revelation." },
+        { role: "resolution", h: "Resolution", t: "Aftermath; tie threads; emotional or thematic landing." }
+      ];
+      role = row4[i].role;
+      heading = row4[i].h;
+      tagline = row4[i].t;
+    } else {
+      if (i === last) {
+        role = "resolution";
+        heading = "Resolution & closure";
+        tagline = "What is different now? What feeling or idea do we leave the reader with?";
+      } else if (i === n - 2) {
+        role = "climax";
+        heading = "Climax / turning point";
+        tagline = "Irreversible change — the story pivots here.";
+      } else if (i === n - 3) {
+        role = "crisis";
+        heading = "Approaching crisis";
+        tagline = "Tighten pressure; force a hard choice, confession, or exposure.";
+      } else if (i === 0) {
+        role = "rising";
+        heading = "Enter the middle";
+        tagline = "Bridge from hook to trouble — what kicks the plot properly into gear?";
+      } else {
+        role = "rising";
+        heading = "Rising action — beat " + (i + 1);
+        tagline = "Add a complication, revelation, or setback that refuses an easy exit.";
+      }
+    }
+
+    var qPlot;
+    var qPlotHint;
+    var qScene;
+    var qSceneHint;
+    var qCraft = "Craft for this beat (pacing, pattern, voice)";
+    var qCraftHint =
+      "Sentence length, paragraph breaks, motif, symbol, time jumps, dialogue tags — what serves this moment?";
+    var qCharTheme;
+    var qCharHint;
+
+    if (role === "resolution") {
+      qPlot = "What consequence lands here? (aftermath, cost, or quiet shift)";
+      qPlotHint = "Avoid brand-new twists; show what the climax means for character, relationships, or theme.";
+      qScene = "Closing texture: image, gesture, dialogue beat, or object";
+      qSceneHint = "What do we see or hear in the final stretch so the ending feels embodied, not explained?";
+      qCharTheme = "Character & theme: what truth does the reader sit with?";
+      qCharHint = "Internal change, irony, or theme shown through action — not a moral lecture.";
+    } else if (role === "climax") {
+      qPlot = "What is the turning point? (decision, confrontation, or revelation)";
+      qPlotHint = "Be specific: who does what, and why it cannot be undone?";
+      qScene = "Peak moment on the page: sensory focus, dialogue, or silence";
+      qSceneHint = "Slow time or sharpen detail — how do you make the reader feel the stakes?";
+      qCharTheme = "Character under pressure: want vs fear in this moment";
+      qCharHint = "What do they risk losing? What do they choose when the cost is real?";
+    } else if (role === "crisis") {
+      qPlot = "What tightens before the climax? (deadline, exposure, sacrifice)";
+      qPlotHint = "Make the climax feel earned — narrow options, raise the cost of failure.";
+      qScene = "How does the scene reflect mounting pressure? (setting, body, weather, crowd)";
+      qSceneHint = "Use environment and reaction shots to echo inner pressure.";
+      qCharTheme = "The almost-choice: what do they almost do, and why does it matter?";
+      qCharHint = "Foreshadow the final decision without giving it away.";
+    } else if (role === "single") {
+      qPlot = "What happens across this middle? (cause → effect chain)";
+      qPlotHint = "Sequence events or realisations so tension climbs toward your conclusion.";
+      qScene = "Key scenes or images you will linger on";
+      qSceneHint = "Where will you slow down for sensory detail, dialogue, or a telling object?";
+      qCharTheme = "Character arc in the middle: shift in want, flaw, or relationship";
+      qCharHint = "What does the protagonist learn, lose, or refuse to see — and how does it show?";
+    } else {
+      qPlot = "What happens in this beat? (cause → effect)";
+      qPlotHint = "One clear move: obstacle surfaces, plan fails, secret slips, loyalty splits …";
+      qScene = "On the page: sensory focus, setting, or line of dialogue";
+      qSceneHint = "What makes this moment feel lived-in, not summarised?";
+      qCharTheme = "Character: want, obstacle, or micro-decision in this beat";
+      qCharHint = "How does this section push motivation, flaw, relationship, or subtext forward?";
+    }
+
+    return {
+      heading: heading,
+      tagline: tagline,
+      qPlot: qPlot,
+      qPlotHint: qPlotHint,
+      qScene: qScene,
+      qSceneHint: qSceneHint,
+      qCraft: qCraft,
+      qCraftHint: qCraftHint,
+      qCharTheme: qCharTheme,
+      qCharHint: qCharHint
+    };
+  }
+
+  function paraCard(index, typeId, bodyTotal, yearBand) {
+    var n = index + 1;
+    var base = "p" + n + "-";
+    var beatRow = "";
+    if (typeId === "narrative") {
+      var bt = bodyTotal || 3;
+      var beat = narrativeBeat(index, bt);
+      beatRow =
+        '<p class="body-beat-hint"><strong>' +
+        esc(beat.heading) +
+        "</strong> — " +
+        esc(beat.tagline) +
+        "</p>";
+    }
+    var toolkit = typeId === "persuasive" ? persuasiveToolkitBlock() : "";
+    var bodyId = base + "body";
+    var bodyHtml = plainBodyToRichHtml(typeId, "", yearBand);
+    return (
+      '<div class="para-card" data-para="' +
+      n +
+      '">' +
+      beatRow +
+      '<div class="body-editor-wrap">' +
+      renderSentenceToolbarHtml(bodyId, typeId) +
+      '<label class="visually-hidden" for="' +
+      bodyId +
+      '">Body paragraph ' +
+      n +
+      "</label>" +
+      '<div contenteditable="true" tabindex="0" spellcheck="true" role="textbox" aria-multiline="true" id="' +
+      bodyId +
+      '" class="body-unified-textarea body-unified-editor" data-autosave>' +
+      bodyHtml +
+      "</div>" +
+      toolkit +
+      "</div></div>"
+    );
+  }
+
+  function buildPlannerMarkup(typeId) {
+    var hookQ, thesisQ, thesisHint;
+
+    if (typeId === "persuasive") {
+      hookQ = "What is your opening hook or context for the issue?";
+      thesisQ = "What is your contention / stance (main argument)?";
+      thesisHint = "One clear sentence readers can agree or disagree with.";
+    } else if (typeId === "online") {
+      hookQ = "What is your lede / hook (first lines) to pull readers in?";
+      thesisQ = "What is your angle / nut graph (why this piece matters now)?";
+      thesisHint = "The promise to the reader — what they&rsquo;ll learn or feel.";
+    } else if (typeId === "narrative") {
+      hookQ = "What is your narrative hook or striking opening?";
+      thesisQ = "What is the central theme, message, or question you&rsquo;re exploring?";
+      thesisHint = "Even stories benefit from a clear through-line.";
+    } else if (typeId === "comparative") {
+      hookQ = "What is your intro hook to frame both (or all) texts?";
+      thesisQ = "What is your thesis (linked insight across the texts)?";
+      thesisHint = "Avoid two mini-essays — show the relationship.";
+    } else if (typeId === "informative") {
+      hookQ = "What will you use to orient the reader (context, question, or overview)?";
+      thesisQ = "What is the controlling idea or purpose of your explanation?";
+      thesisHint = "What readers should understand or be able to do by the end — in one sentence.";
+    } else if (typeId === "other") {
+      hookQ = "What is your intro hook to get the reader interested?";
+      thesisQ = "What is your main point / thesis or central focus?";
+      thesisHint = "Adapt this to your task — controlling idea for the whole piece.";
+    } else {
+      hookQ = "What is your intro hook to get the reader interested?";
+      thesisQ = "What is your main point / thesis?";
+      thesisHint = "Controlling argument or line of thought for the whole piece.";
+    }
+
+    var extra = "";
+    if (typeId === "persuasive") {
+      extra +=
+        field(
+          "x-audience",
+          "Audience & starting position",
+          "Who reads this? What do they already agree with, doubt, or care about? (Shapes which appeals and devices will work.)"
+        ) +
+        field("x-counter", "Counter-argument(s) you will acknowledge", "What would a thoughtful opponent say?") +
+        field("x-rebuttal", "Your rebuttal / response", "Why your contention still stands.");
+    }
+    if (typeId === "online") {
+      extra +=
+        field("x-headline", "Working headline", "You can list 2–3 options.") +
+        field("x-deck", "Deck / subtitle (if using)", "") +
+        field("x-cta", "Call to action or closing engagement", "Comment, share, next step, reflection …");
+    }
+    if (typeId === "narrative") {
+      extra +=
+        field("n-pov", "Narrator & point of view", "First or third (limited/omniscient); who tells the story, and from how far?") +
+        field("n-setting", "Setting & time", "Place, era, and mood — what anchors the reader in a world?") +
+        field("n-protag", "Who we follow & what they want", "Protagonist (or focal character): external goal + internal need, if both matter.") +
+        field("n-conflict", "Central conflict", "What opposes that want — another person, society, self, nature, time, or silence?") +
+        field("n-structure", "Time & structure", "Linear, flashback, in medias res, circular return — how will you move through time on the page?");
+    }
+
+    var otherSpecify =
+      typeId === "other"
+        ? fieldInput(
+            "f-other-specify",
+            "Describe your text type",
+            "What task or format are you planning for? Use language from your task sheet or the Australian Curriculum if it helps.",
+            "e.g. multimodal presentation, spoken persuasive, podcast script, editorial …"
+          )
+        : "";
+
+    var planFieldsOnly =
+      otherSpecify +
+      field("g-hook", hookQ, "") +
+      field("g-thesis", thesisQ, thesisHint) +
+      (typeId === "narrative"
+        ? ""
+        : field(
+            "g-points",
+            "List your points / arguments",
+            "Bullets or one idea per line — sketch what each body paragraph will cover."
+          )) +
+      extra;
+
+    var n = clamp(bodyCountMemory, MIN_BODY, MAX_BODY);
+    bodyCountMemory = n;
+
+    var yearBand = yearBandValue();
+    var bodyCardsHtml = "";
+    for (var j = 0; j < n; j++) {
+      bodyCardsHtml +=
+        '<div class="body-card">' +
+        '<div class="body-card-head">' +
+        '<span class="body-card-title">' +
+        '<span class="body-card-title-main">Body ' +
+        (j + 1) +
+        "</span>" +
+        (j === 0
+          ? '<span class="body-card-dot-hint">Add your dot-point thoughts below</span>'
+          : "") +
+        "</span>" +
+        '<div class="body-card-actions">' +
+        '<span class="card-action-tooltip-host">' +
+        "<button type=\"button\" class=\"card-copy\" data-copy=\"" +
+        j +
+        "\" aria-describedby=\"card-tip-copy-" +
+        j +
+        "\" aria-label=\"Duplicate this paragraph\">" +
+        '<svg class="card-copy-icon" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        "<rect x=\"9\" y=\"9\" width=\"13\" height=\"13\" rx=\"2\" ry=\"2\"/>" +
+        "<path d=\"M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\"/>" +
+        "</svg></button>" +
+        '<span id="card-tip-copy-' +
+        j +
+        '" class="card-action-tooltip" role="tooltip">Duplicate this paragraph</span>' +
+        "</span>" +
+        '<span class="card-action-tooltip-host">' +
+        "<button type=\"button\" class=\"card-remove\" data-remove=\"" +
+        j +
+        "\" aria-describedby=\"card-tip-remove-" +
+        j +
+        "\" aria-label=\"Remove this paragraph\">×</button>" +
+        '<span id="card-tip-remove-' +
+        j +
+        '" class="card-action-tooltip" role="tooltip">Remove this paragraph</span>' +
+        "</span>" +
+        "</div></div>" +
+        '<div class="planner-details-inner">' +
+        paraCard(j, typeId, n, yearBand) +
+        "</div>" +
+        "</div>";
+    }
+
+    var concQ =
+      typeId === "persuasive"
+        ? "How will you reinforce your contention and end with impact?"
+        : typeId === "online"
+          ? "How will you land the piece (synthesis + optional CTA)?"
+          : typeId === "narrative"
+            ? "How will you resolve or reflect — final image or idea?"
+            : typeId === "informative"
+              ? "How will you summarise or consolidate what matters most for the reader?"
+              : typeId === "other"
+                ? "How will you wrap up effectively for this task?"
+                : "How will you synthesise your argument and finish strongly?";
+
+    var concHint =
+      typeId === "persuasive"
+        ? "Circle back to your stance; end memorably; avoid new evidence."
+        : typeId === "online"
+          ? "Synthesise; optional call to action or reflection for readers."
+          : typeId === "narrative"
+            ? "Land the emotional or thematic close — image or insight, not a new twist."
+            : typeId === "informative"
+              ? "Stress what matters most; reader takeaway or next step."
+              : typeId === "other"
+                ? "Match your task: closure that fits the brief."
+                : typeId === "comparative"
+                  ? "Unify the texts in one insight; avoid two disconnected endings."
+                  : "Synthesise; strong final emphasis without new arguments.";
+
+    var concFieldsOnly = field("g-conclusion", concQ, concHint);
+
+    return (
+      "<div class=\"planner-stack\">" +
+      '<div class="plan-conclusion-cards">' +
+      '<section class="planner-section-card" aria-label="Plan">' +
+      '<div class="planner-section-card-head">' +
+      sectionTitleWithHint("Plan", buildPlanSectionBubbleInner(typeId, thesisHint)) +
+      "</div>" +
+      '<div class="planner-details-inner">' +
+      '<div class="plan-fields">' +
+      planFieldsOnly +
+      "</div>" +
+      "</div>" +
+      "</section>" +
+      '<section class="planner-section-card" aria-label="Conclusion">' +
+      '<div class="planner-section-card-head">' +
+      sectionTitleWithHint("Conclusion", buildConcSectionBubbleInner(typeId)) +
+      "</div>" +
+      '<div class="planner-details-inner">' +
+      '<div class="conc-fields">' +
+      concFieldsOnly +
+      "</div>" +
+      "</div>" +
+      "</section>" +
+      "</div>" +
+      "<section class=\"body-cards-region\" aria-label=\"Body paragraphs\">" +
+      '<div class="body-cards-toolbar">' +
+      '<div class="body-cards-toolbar-title">' +
+      '<h2 class="body-cards-heading">Body paragraphs</h2>' +
+      "</div>" +
+      '<button type="button" class="primary" id="btn-add-paragraph-end" title="Add a body paragraph at the end">+ Paragraph</button>' +
+      "</div>" +
+      '<div class="body-cards-grid">' +
+      bodyCardsHtml +
+      "</div>" +
+      "</section>" +
+      "</div>"
+    );
+  }
+
+  function hydrateBodySlotCountFromStorage() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      if (data.bodySlotCount != null) {
+        bodyCountMemory = clamp(parseInt(data.bodySlotCount, 10) || 3, MIN_BODY, MAX_BODY);
+      } else if (data.fields && data.fields["f-body-count"]) {
+        bodyCountMemory = clamp(parseInt(data.fields["f-body-count"], 10) || 3, MIN_BODY, MAX_BODY);
+      }
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function renderMain() {
+    /* After + Paragraph / remove, bodyCountMemory is updated before render — do not
+       reload slot count from storage here or we redraw the old number (hydrate runs before saveAll). */
+    if (!pendingBodyRestore) {
+      hydrateBodySlotCountFromStorage();
+    }
+    var typeId = $("f-type").value;
+    $("planner-main").innerHTML = buildPlannerMarkup(typeId);
+    $("type-hint").textContent = getTypeMeta(typeId).hint;
+    loadFields();
+    if (pendingBodyRestore) {
+      /* Pending array is authoritative (add/remove). Do not let loadFields() infer a higher
+         count from stale pN-body keys still in JSON before saveAll() prunes them — that broke delete. */
+      applyBodyData(pendingBodyRestore);
+      bodyCountMemory = clamp(pendingBodyRestore.length, MIN_BODY, MAX_BODY);
+      pendingBodyRestore = null;
+    }
+    bindAutosave();
+    bindAddParagraphButton();
+    bindSentenceToolbar();
+  }
+
+  var saveTimer;
+  var saveStatusHideTimer;
+  /**
+   * tone: "ok" green (browser save), "warn" amber (limits/errors), "muted" grey (info).
+   * Omit tone for simple detection from message text.
+   */
+  function setSaveStatus(msg, tone) {
+    var el = $("save-status");
+    if (!el) return;
+    clearTimeout(saveStatusHideTimer);
+    saveStatusHideTimer = null;
+    el.textContent = msg || "";
+    el.classList.remove("save-status--ok", "save-status--warn", "save-status--muted");
+    if (!msg) return;
+    var t = tone;
+    if (!t) {
+      if (/^Saving/i.test(msg) || /^Saved/i.test(msg) || msg === "Cleared") t = "ok";
+      else if (/Could not|Maximum \d+|Keep at least/i.test(msg)) t = "warn";
+      else t = "muted";
+    }
+    el.classList.add("save-status--" + t);
+  }
+  function scheduleHideSaveStatus(ms) {
+    clearTimeout(saveStatusHideTimer);
+    saveStatusHideTimer = setTimeout(function () {
+      setSaveStatus("");
+    }, ms || 2000);
+  }
+
+  function onBodyEditorPaste(e) {
+    var host = e.target.closest && e.target.closest(".body-unified-editor");
+    if (host && host.classList.contains("body-structured-host")) return;
+    e.preventDefault();
+    var text = (e.clipboardData || window.clipboardData).getData("text/plain");
+    if (!text) return;
+    try {
+      document.execCommand("insertText", false, text);
+    } catch (err) {
+      /* ignore */
+    }
+  }
+
+  var DOT_POINT_PREFIX = "• ";
+
+  /** Ensures a leading bullet when there is real text; clears when empty (structured slim fields only). */
+  function syncDotPointInSlimField(ta) {
+    if (!ta || !ta.classList.contains("body-plan-slim-input")) return;
+    var v = ta.value;
+    if (!v.trim()) {
+      ta.value = "";
+      return;
+    }
+    if (/^[\s•\u2022]+$/.test(v)) {
+      ta.value = "";
+      return;
+    }
+    if (/^\s*[•\u2022]\s?/.test(v)) return;
+    var start = ta.selectionStart;
+    var end = ta.selectionEnd;
+    var lead = v.match(/^\s*/);
+    var ws = lead ? lead[0] : "";
+    var rest = v.slice(ws.length);
+    ta.value = ws + DOT_POINT_PREFIX + rest;
+    var delta = DOT_POINT_PREFIX.length;
+    ta.selectionStart = Math.min((start || 0) + delta, ta.value.length);
+    ta.selectionEnd = Math.min((end || 0) + delta, ta.value.length);
+  }
+
+  function onStructuredBodyInput(e) {
+    if (!e.target.classList.contains("body-plan-slim-input")) return;
+    syncDotPointInSlimField(e.target);
+    onAnyInput();
+  }
+
+  function bindAutosave() {
+    var sel = "[data-autosave], #f-name, #f-subject, #f-topic, #f-words, #f-type, #f-year-band";
+    document.querySelectorAll(sel).forEach(function (el) {
+      el.removeEventListener("input", onAnyInput);
+      el.removeEventListener("change", onAnyInput);
+    });
+    document.querySelectorAll(sel).forEach(function (el) {
+      el.addEventListener("input", onAnyInput);
+      el.addEventListener("change", onAnyInput);
+    });
+    document.querySelectorAll(".body-unified-editor").forEach(function (el) {
+      el.removeEventListener("paste", onBodyEditorPaste);
+      el.addEventListener("paste", onBodyEditorPaste);
+      el.removeEventListener("input", onStructuredBodyInput);
+      el.addEventListener("input", onStructuredBodyInput);
+    });
+  }
+
+  function onAnyInput() {
+    setSaveStatus("Saving…", "ok");
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveAll, 350);
+  }
+
+  function collectState() {
+    var data = {
+      name: $("f-name").value,
+      subject: $("f-subject").value,
+      topic: $("f-topic").value,
+      words: $("f-words").value,
+      type: $("f-type").value,
+      yearBand: $("f-year-band").value,
+      bodySlotCount: clamp(
+        Math.max(bodyCountMemory, inferMaxBodyIndexFromDom()),
+        MIN_BODY,
+        MAX_BODY
+      ),
+      fields: {}
+    };
+    document.querySelectorAll("[data-autosave]").forEach(function (el) {
+      if (el.id) data.fields[el.id] = readAutosaveValue(el);
+    });
+    return data;
+  }
+
+  function saveAll() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
+      setSaveStatus("Saved in this browser", "ok");
+      scheduleHideSaveStatus(2200);
+    } catch (err) {
+      setSaveStatus("Could not save", "warn");
+      scheduleHideSaveStatus(4000);
+    }
+  }
+
+  function loadFields() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      if (data.name != null) $("f-name").value = data.name;
+      if (data.subject != null) $("f-subject").value = data.subject;
+      if (data.topic != null) $("f-topic").value = data.topic;
+      if (data.words != null) $("f-words").value = data.words;
+      if (data.yearBand != null && $("f-year-band")) $("f-year-band").value = data.yearBand;
+      var fields = data.fields || {};
+      if (data.bodySlotCount != null) {
+        bodyCountMemory = clamp(parseInt(data.bodySlotCount, 10) || 3, MIN_BODY, MAX_BODY);
+      } else if (fields["f-body-count"]) {
+        bodyCountMemory = clamp(parseInt(fields["f-body-count"], 10) || 3, MIN_BODY, MAX_BODY);
+      }
+      var inferredBodies = inferMaxBodyIndexFromFields(fields);
+      if (inferredBodies > 0) {
+        bodyCountMemory = clamp(Math.max(bodyCountMemory, inferredBodies), MIN_BODY, MAX_BODY);
+      }
+      var typeForMigrate = data.type != null ? data.type : $("f-type").value;
+      var mSlots = clamp(bodyCountMemory, MIN_BODY, MAX_BODY);
+      var ybMigrate = $("f-year-band") ? $("f-year-band").value : "910";
+      for (var mi = 1; mi <= mSlots; mi++) {
+        mergeLegacyParagraphPlan(typeForMigrate, fields, mi, ybMigrate);
+      }
+      var strippedSentenceOutline = false;
+      Object.keys(fields).forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        if (isBodyUnifiedEditor(el)) {
+          var rawBody = fields[id];
+          if (isOnlyNumberedSentencePlanBody(rawBody, typeForMigrate, ybMigrate)) {
+            fields[id] = "";
+            strippedSentenceOutline = true;
+          }
+          writeAutosaveBodyHtml(el, typeForMigrate, fields[id], ybMigrate);
+        } else {
+          el.value = fields[id];
+        }
+      });
+      if (strippedSentenceOutline) {
+        setTimeout(function () {
+          saveAll();
+        }, 0);
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  function initTypeSelect() {
+    var sel = $("f-type");
+    sel.innerHTML = TEXT_TYPES.map(function (t) {
+      return "<option value=\"" + t.id + "\">" + esc(t.label) + "</option>";
+    }).join("");
+  }
+
+  function getOutlineRows() {
+    var rows = [];
+    rows.push({ label: "Name", value: $("f-name").value });
+    rows.push({ label: "Subject / class", value: $("f-subject").value });
+    rows.push({ label: "Topic / question", value: $("f-topic").value });
+    rows.push({ label: "Word count", value: $("f-words").value });
+    var typeLabel = $("f-type").selectedOptions[0] && $("f-type").selectedOptions[0].textContent;
+    rows.push({ label: "Text type", value: typeLabel || "" });
+    var yb = $("f-year-band");
+    if (yb) {
+      rows.push({
+        label: "Year band",
+        value: yb.options[yb.selectedIndex] ? yb.options[yb.selectedIndex].textContent : ""
+      });
+    }
+    var main = $("planner-main");
+    if (main) {
+      main.querySelectorAll("[data-autosave]").forEach(function (el) {
+        var lbl = document.querySelector('label[for="' + el.id + '"]');
+        var title;
+        var bm = el.id.match(/^p(\d+)-body$/);
+        if (bm) {
+          title = "Body paragraph " + bm[1];
+        } else {
+          title = lbl ? lbl.textContent.replace(/\s+/g, " ").trim() : el.id;
+        }
+        rows.push({ label: title, value: readAutosaveValue(el) });
+      });
+    }
+    return rows;
+  }
+
+  function getBudgetPlainBlock() {
+    var words = parseInt($("f-words").value, 10);
+    var typeId = $("f-type").value;
+    var bodyN = clamp(bodyCountMemory || 3, MIN_BODY, MAX_BODY);
+    var b = computeBudget(words, typeId, bodyN);
+    if (!b) return "";
+    return (
+      "Word budget (guide)\n" +
+      "— Introduction: ≈ " + formatRange(b.intro) + " words\n" +
+      "— Each body paragraph (" + b.bodyN + "×): ≈ " + formatRange(b.bodyEach) + " words\n" +
+      "— Conclusion: ≈ " + formatRange(b.conclusion) + " words"
+    );
+  }
+
+  function outlineText() {
+    var lines = [];
+    getOutlineRows().forEach(function (row) {
+      lines.push(row.label + ":");
+      lines.push(row.value || "—");
+      lines.push("");
+    });
+    return lines.join("\n").trim();
+  }
+
+  function escHtml(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function buildMrCEmailPlain() {
+    var name = ($("f-name").value || "").trim() || "Student";
+    var budget = getBudgetPlainBlock();
+    var lines = [];
+    lines.push("Dear Mr C,");
+    lines.push("");
+    lines.push("Please find my essay plan below.");
+    lines.push("");
+    lines.push("────────────────────────────────────────");
+    lines.push("DETAILS");
+    lines.push("────────────────────────────────────────");
+    getOutlineRows().forEach(function (row) {
+      lines.push("");
+      lines.push(row.label.toUpperCase());
+      lines.push(row.value ? row.value : "—");
+    });
+    if (budget) {
+      lines.push("");
+      lines.push("────────────────────────────────────────");
+      lines.push(budget);
+    }
+    lines.push("");
+    lines.push("────────────────────────────────────────");
+    lines.push("");
+    lines.push("Kind regards,");
+    lines.push(name);
+    return lines.join("\n").trim();
+  }
+
+  function buildMrCEmailHtml() {
+    var name = escHtml(($("f-name").value || "").trim() || "Student");
+    var budget = getBudgetPlainBlock();
+    var wrap =
+      "font-family: Georgia, Cambria, 'Times New Roman', Times, serif; font-size: 14pt; line-height: 1.5; color: #222222;";
+    var h =
+      "font-size: 14pt; font-weight: 700; margin: 20pt 0 8pt 0; color: #111111; letter-spacing: 0.02em; border-bottom: 1px solid #cccccc; padding-bottom: 4pt;";
+    var meta = "font-size: 14pt; margin: 0 0 14pt 0;";
+    var lbl = "font-size: 11pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #444444; margin: 16pt 0 4pt 0;";
+    var block = "font-size: 14pt; margin: 0 0 14pt 0; white-space: pre-wrap;";
+    var parts = [];
+    parts.push('<div style="' + wrap + '">');
+    parts.push('<p style="' + meta + '">Dear Mr C,</p>');
+    parts.push('<p style="' + meta + '">Please find my essay plan below.</p>');
+    parts.push('<p style="' + h + '">Details</p>');
+    getOutlineRows().forEach(function (row) {
+      parts.push('<p style="' + lbl + '">' + escHtml(row.label) + "</p>");
+      parts.push('<p style="' + block + '">' + escHtml(row.value || "—") + "</p>");
+    });
+    if (budget) {
+      parts.push('<p style="' + h + '">Word budget (guide)</p>');
+      parts.push('<p style="' + block + '">' + escHtml(budget) + "</p>");
+    }
+    parts.push('<p style="' + meta + ' margin-top:22pt;">Kind regards,<br/>' + name + "</p>");
+    parts.push("</div>");
+    return parts.join("");
+  }
+
+  function mailtoShortBody() {
+    var name = ($("f-name").value || "").trim() || "Student";
+    return (
+      "Dear Mr C,\n\n" +
+      "My full essay plan has been copied to my clipboard.\n\n" +
+      "Please click in the message body and paste (⌘V on Mac, Ctrl+V on Windows) so the formatting appears at 14pt.\n\n" +
+      "Kind regards,\n" +
+      name
+    );
+  }
+
+  function copyEmailToClipboard(html, plain) {
+    if (navigator.clipboard && typeof ClipboardItem !== "undefined") {
+      try {
+        var htmlBlob = new Blob([html], { type: "text/html" });
+        var textBlob = new Blob([plain], { type: "text/plain" });
+        return navigator.clipboard.write([
+          new ClipboardItem({
+            "text/html": htmlBlob,
+            "text/plain": textBlob
+          })
+        ]);
+      } catch (e) {
+        /* fall through */
+      }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(plain);
+    }
+    return Promise.reject(new Error("Clipboard not available"));
+  }
+
+  function openMailtoMrC() {
+    var subjParts = ["Essay plan"];
+    var n = ($("f-name").value || "").trim();
+    var t = ($("f-topic").value || "").trim();
+    if (n) subjParts.push(n);
+    if (t) subjParts.push(t.length > 40 ? t.slice(0, 37) + "…" : t);
+    var subj = subjParts.join(" — ");
+    var fullPlain = buildMrCEmailPlain();
+    var fullHtml = buildMrCEmailHtml();
+    var maxLen = 6800;
+    var bodyForMail = fullPlain;
+    var base = "mailto:" + MR_C_EMAIL + "?subject=" + encodeURIComponent(subj) + "&body=";
+    if ((base + encodeURIComponent(bodyForMail)).length > maxLen) {
+      bodyForMail = mailtoShortBody();
+    }
+    copyEmailToClipboard(fullHtml, fullPlain)
+      .then(function () {
+        setSaveStatus("Opening email — Select All in the body, then Paste (⌘V / Ctrl+V) for 14pt", "muted");
+        scheduleHideSaveStatus(5000);
+        window.location.href = base + encodeURIComponent(bodyForMail);
+      })
+      .catch(function () {
+        window.location.href = base + encodeURIComponent(bodyForMail);
+        setSaveStatus("Could not copy formatted text — email still opened", "warn");
+        scheduleHideSaveStatus(4000);
+      });
+  }
+
+  $("btn-copy").addEventListener("click", function () {
+    var text = outlineText();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        setSaveStatus("Outline copied", "muted");
+        scheduleHideSaveStatus(2000);
+      });
+    } else {
+      prompt("Copy this outline:", text);
+    }
+  });
+
+  $("btn-email-mrc").addEventListener("click", function () {
+    openMailtoMrC();
+  });
+
+  $("btn-clear").addEventListener("click", function () {
+    if (!confirm("Clear saved data in this browser for this planner?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    bodyCountMemory = 3;
+    $("f-name").value = "";
+    $("f-subject").value = "";
+    $("f-topic").value = "";
+    $("f-words").value = "";
+    $("f-type").selectedIndex = 0;
+    if ($("f-year-band")) $("f-year-band").value = "910";
+    renderMain();
+    setSaveStatus("Cleared", "ok");
+    scheduleHideSaveStatus(2000);
+  });
+
+  $("f-type").addEventListener("change", function () {
+    saveAll();
+    renderMain();
+  });
+
+  $("f-year-band").addEventListener("change", function () {
+    saveAll();
+    renderMain();
+  });
+
+  initTypeSelect();
+
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      var data = JSON.parse(raw);
+      if (data.type) $("f-type").value = data.type;
+      if (data.yearBand != null && $("f-year-band")) $("f-year-band").value = data.yearBand;
+      if (data.bodySlotCount != null) {
+        bodyCountMemory = clamp(parseInt(data.bodySlotCount, 10) || 3, MIN_BODY, MAX_BODY);
+      } else {
+        var fbc = (data.fields || {})["f-body-count"];
+        if (fbc != null) bodyCountMemory = clamp(parseInt(fbc, 10) || 3, MIN_BODY, MAX_BODY);
+      }
+    }
+  } catch (e) { /* ignore */ }
+
+  renderMain();
+})();
+  </script>
+</body>
+</html>
