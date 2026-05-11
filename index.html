@@ -1008,8 +1008,9 @@
   var STORAGE_KEY = "essayplanner-planomy-v1";
   var MR_C_EMAIL = "achievewriting@gmail.com";
   var MIN_BODY = 1;
+  var DEFAULT_BODY_SLOTS = 1;
   var MAX_BODY = 24;
-  var bodyCountMemory = 3;
+  var bodyCountMemory = DEFAULT_BODY_SLOTS;
   var pendingBodyRestore = null;
 
   function yearBandValue() {
@@ -2088,7 +2089,7 @@
     var conclusion = roundRange(total * cp[0], total * cp[1]);
     var bodyTotalLo = Math.max(0, total - intro.hi - conclusion.hi);
     var bodyTotalHi = Math.max(0, total - intro.lo - conclusion.lo);
-    var n = clamp(bodyCount || 3, MIN_BODY, MAX_BODY);
+    var n = clamp(bodyCount || DEFAULT_BODY_SLOTS, MIN_BODY, MAX_BODY);
     var perLo = bodyTotalLo / n;
     var perHi = bodyTotalHi / n;
     var per = roundRange(Math.min(perLo, perHi), Math.max(perLo, perHi));
@@ -2444,7 +2445,7 @@
     var base = "p" + n + "-";
     var beatRow = "";
     if (typeId === "narrative") {
-      var bt = bodyTotal || 3;
+      var bt = bodyTotal || DEFAULT_BODY_SLOTS;
       var beat = narrativeBeat(index, bt);
       beatRow =
         '<p class="body-beat-hint"><strong>' +
@@ -2684,9 +2685,9 @@
       if (!raw) return;
       var data = JSON.parse(raw);
       if (data.bodySlotCount != null) {
-        bodyCountMemory = clamp(parseInt(data.bodySlotCount, 10) || 3, MIN_BODY, MAX_BODY);
+        bodyCountMemory = clamp(parseInt(data.bodySlotCount, 10) || DEFAULT_BODY_SLOTS, MIN_BODY, MAX_BODY);
       } else if (data.fields && data.fields["f-body-count"]) {
-        bodyCountMemory = clamp(parseInt(data.fields["f-body-count"], 10) || 3, MIN_BODY, MAX_BODY);
+        bodyCountMemory = clamp(parseInt(data.fields["f-body-count"], 10) || DEFAULT_BODY_SLOTS, MIN_BODY, MAX_BODY);
       }
     } catch (e) {
       /* ignore */
@@ -2857,9 +2858,9 @@
       if (data.yearBand != null && $("f-year-band")) $("f-year-band").value = data.yearBand;
       var fields = data.fields || {};
       if (data.bodySlotCount != null) {
-        bodyCountMemory = clamp(parseInt(data.bodySlotCount, 10) || 3, MIN_BODY, MAX_BODY);
+        bodyCountMemory = clamp(parseInt(data.bodySlotCount, 10) || DEFAULT_BODY_SLOTS, MIN_BODY, MAX_BODY);
       } else if (fields["f-body-count"]) {
-        bodyCountMemory = clamp(parseInt(fields["f-body-count"], 10) || 3, MIN_BODY, MAX_BODY);
+        bodyCountMemory = clamp(parseInt(fields["f-body-count"], 10) || DEFAULT_BODY_SLOTS, MIN_BODY, MAX_BODY);
       }
       var inferredBodies = inferMaxBodyIndexFromFields(fields);
       if (inferredBodies > 0) {
@@ -2936,7 +2937,7 @@
   function getBudgetPlainBlock() {
     var words = parseInt($("f-words").value, 10);
     var typeId = $("f-type").value;
-    var bodyN = clamp(bodyCountMemory || 3, MIN_BODY, MAX_BODY);
+    var bodyN = clamp(bodyCountMemory || DEFAULT_BODY_SLOTS, MIN_BODY, MAX_BODY);
     var b = computeBudget(words, typeId, bodyN);
     if (!b) return "";
     return (
@@ -3101,7 +3102,7 @@
   $("btn-clear").addEventListener("click", function () {
     if (!confirm("Clear saved data in this browser for this planner?")) return;
     localStorage.removeItem(STORAGE_KEY);
-    bodyCountMemory = 3;
+    bodyCountMemory = DEFAULT_BODY_SLOTS;
     $("f-name").value = "";
     $("f-subject").value = "";
     $("f-topic").value = "";
@@ -3132,10 +3133,10 @@
       if (data.type) $("f-type").value = data.type;
       if (data.yearBand != null && $("f-year-band")) $("f-year-band").value = data.yearBand;
       if (data.bodySlotCount != null) {
-        bodyCountMemory = clamp(parseInt(data.bodySlotCount, 10) || 3, MIN_BODY, MAX_BODY);
+        bodyCountMemory = clamp(parseInt(data.bodySlotCount, 10) || DEFAULT_BODY_SLOTS, MIN_BODY, MAX_BODY);
       } else {
         var fbc = (data.fields || {})["f-body-count"];
-        if (fbc != null) bodyCountMemory = clamp(parseInt(fbc, 10) || 3, MIN_BODY, MAX_BODY);
+        if (fbc != null) bodyCountMemory = clamp(parseInt(fbc, 10) || DEFAULT_BODY_SLOTS, MIN_BODY, MAX_BODY);
       }
     }
   } catch (e) { /* ignore */ }
